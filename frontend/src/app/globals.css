@@ -1,0 +1,419 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN TOKENS — NutriDiabetes Medical Design System
+   ============================================================ */
+:root {
+  /* Brand */
+  --primary:          #0057B8;
+  --primary-dark:     #003D82;
+  --primary-light:    #E8F1FB;
+  --secondary:        #00965A;
+  --secondary-dark:   #006E41;
+  --secondary-light:  #E6F7EF;
+
+  /* Semantic */
+  --danger:           #DC2626;
+  --danger-light:     #FEF2F2;
+  --warning:          #D97706;
+  --warning-light:    #FFFBEB;
+  --success:          #059669;
+  --success-light:    #ECFDF5;
+  --info:             #7C3AED;
+  --info-light:       #F5F3FF;
+
+  /* Neutral surface */
+  --bg:               #EEF2F7;
+  --surface:          #FFFFFF;
+  --border:           #DDE3EE;
+  --border-subtle:    #EFF2F8;
+
+  /* Typography */
+  --text:             #1A2B4A;
+  --text-secondary:   #5B6B8A;
+  --text-muted:       #8B9AB5;
+  --text-disabled:    #BCC5D6;
+
+  /* Elevation shadows */
+  --shadow-xs:  0 1px 2px rgba(15,28,60,0.05);
+  --shadow-sm:  0 2px 8px rgba(15,28,60,0.07);
+  --shadow-md:  0 4px 16px rgba(15,28,60,0.09);
+  --shadow-lg:  0 8px 32px rgba(15,28,60,0.11);
+  --shadow-xl:  0 16px 48px rgba(15,28,60,0.14);
+}
+
+/* ============================================================
+   GLOBAL RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   PWA SAFE AREAS
+   ============================================================ */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top    { padding-top:    max(12px, env(safe-area-inset-top))    !important; }
+  .safe-area-bottom { padding-bottom: max(8px, env(safe-area-inset-bottom)) !important; }
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar         { width: 5px; height: 5px; }
+::-webkit-scrollbar-track   { background: transparent; }
+::-webkit-scrollbar-thumb   { background: var(--border); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+*                           { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+@keyframes pulseRing {
+  0%   { box-shadow: 0 0 0 0   rgba(0, 87, 184, 0.35); }
+  70%  { box-shadow: 0 0 0 10px rgba(0, 87, 184, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(0, 87, 184, 0); }
+}
+@keyframes gradientShift {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-fade-in      { animation: fadeIn     0.3s  ease         both; }
+.animate-slide-down   { animation: slideDown  0.3s  ease         both; }
+.animate-slide-up     { animation: slideUp    0.35s ease         both; }
+.animate-slide-right  { animation: slideRight 0.35s ease         both; }
+.animate-scale-in     { animation: scaleIn    0.3s  ease         both; }
+.animate-float        { animation: float      3s    ease-in-out  infinite; }
+.animate-shimmer      { animation: shimmer    2s    linear       infinite; }
+.animate-pulse-ring   { animation: pulseRing  2s    ease         infinite; }
+.animate-spin-slow    { animation: spin-slow  3s    linear       infinite; }
+
+.stagger-1 { animation-delay: 0.07s  !important; }
+.stagger-2 { animation-delay: 0.14s  !important; }
+.stagger-3 { animation-delay: 0.21s  !important; }
+.stagger-4 { animation-delay: 0.28s  !important; }
+.stagger-5 { animation-delay: 0.35s  !important; }
+.stagger-6 { animation-delay: 0.42s  !important; }
+
+/* ============================================================
+   SHADOWS — in @layer utilities so hover: variant works
+   ============================================================ */
+@layer utilities {
+  .shadow-soft     { box-shadow: var(--shadow-sm); }
+  .shadow-medium   { box-shadow: var(--shadow-md); }
+  .shadow-elevated { box-shadow: var(--shadow-lg); }
+  .shadow-glow-blue { box-shadow: 0 4px 20px rgba(0, 87, 184, 0.25); }
+  .shadow-card     { box-shadow: 0 2px 8px rgba(15,28,60,0.07), 0 0 0 1px rgba(15,28,60,0.04); }
+}
+
+/* ============================================================
+   TRANSITION HELPER
+   ============================================================ */
+.transition-smooth { transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1); }
+.hover-lift        { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-lift:hover  { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.hover-dim         { transition: opacity 0.2s ease; }
+.hover-dim:hover   { opacity: 0.85; }
+
+/* ============================================================
+   BACKGROUNDS & GRADIENTS
+   ============================================================ */
+.gradient-hero {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+.gradient-login {
+  background: linear-gradient(145deg, #0A1F4E 0%, #0057B8 50%, #006E41 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 12s ease infinite;
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, var(--danger) 0%, #991B1B 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, #7C3AED 0%, #5B21B6 100%);
+}
+
+/* ============================================================
+   GLASSMORPHISM
+   ============================================================ */
+.glass {
+  background:           rgba(255, 255, 255, 0.10);
+  backdrop-filter:      blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border:               1px solid rgba(255, 255, 255, 0.20);
+}
+
+.glass-dark {
+  background:           rgba(10, 20, 50, 0.40);
+  backdrop-filter:      blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border:               1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background:    var(--surface);
+  border-radius: 16px;
+  border:        1px solid var(--border-subtle);
+  box-shadow:    var(--shadow-sm);
+  padding:       24px;
+}
+
+.card-interactive {
+  @apply card;
+  cursor:     pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-interactive:hover  { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.card-interactive:active { transform: translateY(0); }
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.input-field,
+.input-premium {
+  display:        block;
+  width:          100%;
+  padding:        11px 16px;
+  font-size:      15px;
+  color:          var(--text);
+  background:     var(--surface);
+  border:         1.5px solid var(--border);
+  border-radius:  12px;
+  outline:        none;
+  transition:     border-color 0.2s, box-shadow 0.2s;
+  line-height:    1.5;
+}
+.input-field::placeholder,
+.input-premium::placeholder { color: var(--text-muted); }
+.input-field:hover,
+.input-premium:hover        { border-color: #A0AECB; }
+.input-field:focus,
+.input-premium:focus        { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 87, 184, 0.12); }
+.input-field:disabled,
+.input-premium:disabled     { background: var(--border-subtle); color: var(--text-disabled); cursor: not-allowed; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-primary {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           100%;
+  padding:         13px 24px;
+  font-size:       15px;
+  font-weight:     600;
+  color:           white;
+  background:      linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border:          none;
+  border-radius:   12px;
+  cursor:          pointer;
+  transition:      all 0.22s ease;
+  box-shadow:      0 2px 10px rgba(0, 87, 184, 0.32);
+  letter-spacing:  0.01em;
+}
+.btn-primary:hover        { box-shadow: 0 6px 22px rgba(0, 87, 184, 0.42); transform: translateY(-1px); }
+.btn-primary:active       { transform: scale(0.98); }
+.btn-primary:disabled     { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         12px 24px;
+  font-size:       15px;
+  font-weight:     600;
+  color:           var(--text);
+  background:      var(--surface);
+  border:          1.5px solid var(--border);
+  border-radius:   12px;
+  cursor:          pointer;
+  transition:      all 0.2s ease;
+}
+.btn-secondary:hover { background: var(--bg); border-color: #A0AECB; }
+
+/* Google OAuth */
+.btn-google {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             10px;
+  width:           100%;
+  padding:         12px 24px;
+  font-size:       15px;
+  font-weight:     500;
+  color:           var(--text);
+  background:      var(--surface);
+  border:          1.5px solid var(--border);
+  border-radius:   12px;
+  cursor:          pointer;
+  transition:      all 0.2s ease;
+  box-shadow:      var(--shadow-xs);
+}
+.btn-google:hover    { background: var(--bg); border-color: #A0AECB; box-shadow: var(--shadow-sm); }
+.btn-google:active   { transform: scale(0.98); }
+.btn-google:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* ============================================================
+   DIVIDER "OR"
+   ============================================================ */
+.divider-or {
+  display:     flex;
+  align-items: center;
+  margin:      20px 0;
+}
+.divider-or::before,
+.divider-or::after   { content: ''; flex: 1; height: 1px; background: var(--border); }
+.divider-or > span   { padding: 0 12px; }
+
+/* ============================================================
+   BADGES & PILLS
+   ============================================================ */
+.badge-pill {
+  display:     inline-flex;
+  align-items: center;
+  gap:         6px;
+  padding:     4px 12px;
+  border-radius: 100px;
+  font-size:   12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   FEATURE CARD (login side panel)
+   ============================================================ */
+.feature-card {
+  display:         flex;
+  gap:             12px;
+  align-items:     flex-start;
+  padding:         12px 14px;
+  background:      rgba(255, 255, 255, 0.08);
+  border:          1px solid rgba(255, 255, 255, 0.13);
+  border-radius:   14px;
+  backdrop-filter: blur(8px);
+  transition:      background 0.2s;
+}
+.feature-card:hover { background: rgba(255, 255, 255, 0.13); }
+
+/* ============================================================
+   CHAT BUBBLES
+   ============================================================ */
+.chat-bubble-user {
+  background:    linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color:         white;
+  border-radius: 18px 18px 4px 18px;
+  padding:       10px 14px;
+  font-size:     14px;
+  line-height:   1.5;
+}
+
+.chat-bubble-bot {
+  background:    var(--surface);
+  border:        1px solid var(--border-subtle);
+  border-radius: 18px 18px 18px 4px;
+  padding:       10px 14px;
+  font-size:     14px;
+  line-height:   1.5;
+  box-shadow:    var(--shadow-xs);
+  color:         var(--text);
+}
+
+/* ============================================================
+   TEXT GRADIENT
+   ============================================================ */
+.text-gradient {
+  background:              linear-gradient(135deg, var(--primary), #6366F1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip:         text;
+}
+
+/* ============================================================
+   LAYOUT — sidebar & navbar offsets
+   ============================================================ */
+
+/* Desktop: offset for left sidebar (w-20 collapsed / w-56 expanded) */
+.page-with-nav {
+  padding-left: 0;
+}
+@media (min-width: 1024px) {
+  .page-with-nav { padding-left: 5rem; /* w-20 */ }
+}
+@media (min-width: 1280px) {
+  .page-with-nav { padding-left: 14rem; /* w-56 */ }
+}
+
+/* Tablet: offset for top navbar (h ~48px) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .page-with-nav { padding-top: 52px; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+}

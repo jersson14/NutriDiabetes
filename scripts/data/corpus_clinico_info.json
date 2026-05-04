@@ -1,0 +1,32 @@
+[
+  {
+    "doc_id": "idf-atlas-2025",
+    "filename": "IDF_Diabetes_Atlas_11th_Edition_2025_WEB.pdf",
+    "title": "IDF Diabetes Atlas, 11th Edition",
+    "institution": "International Diabetes Federation (IDF)",
+    "year": 2025,
+    "source_type": "atlas_clinico",
+    "pdf_hash": "81d01e73d486adbe",
+    "fecha_indexado": "2026-05-03T15:28:15.908427",
+    "total_paginas": 128,
+    "total_chunks": 269,
+    "total_indexados": 269,
+    "namespace": "clinical",
+    "embedding_model": "text-embedding-3-small"
+  },
+  {
+    "doc_id": "ada-standards-2026",
+    "filename": "standards-of-care-2026.pdf",
+    "title": "Standards of Medical Care in Diabetes 2026",
+    "institution": "American Diabetes Association (ADA)",
+    "year": 2026,
+    "source_type": "guia_clinica",
+    "pdf_hash": "7e16169786974cf2",
+    "fecha_indexado": "2026-05-03T15:28:33.110897",
+    "total_paginas": 375,
+    "total_chunks": 2179,
+    "total_indexados": 2179,
+    "namespace": "clinical",
+    "embedding_model": "text-embedding-3-small"
+  }
+]
