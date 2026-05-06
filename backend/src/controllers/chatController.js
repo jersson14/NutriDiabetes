@@ -132,7 +132,7 @@ const sendMessage = async (req, res) => {
     const callRAG = () => axios.post(
       `${RAG_SERVICE_URL}/api/recommend`,
       ragPayload,
-      { timeout: 55000 }
+      { timeout: 180000 }
     );
 
     try {
