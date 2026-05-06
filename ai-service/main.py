@@ -86,6 +86,22 @@ async def health():
     }
 
 
+@app.get("/ping")
+async def ping():
+    """Keep-alive endpoint — llamado periódicamente para evitar cold starts."""
+    return {"pong": True, "ts": time.time()}
+
+
+@app.post("/api/warmup")
+async def warmup():
+    """Pre-calienta el servicio generando un embedding vacío para activar conexiones."""
+    try:
+        rag_service._get_embedding("warmup")
+        return {"status": "warm", "pinecone": rag_service.check_connection()}
+    except Exception as e:
+        return {"status": "partial", "error": str(e)}
+
+
 @app.post("/api/recommend")
 async def recommend(request: RecommendRequest):
     """

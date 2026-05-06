@@ -96,39 +96,59 @@ const sendMessage = async (req, res) => {
       ? Math.round((glucosaRows.filter(r => r.esta_en_rango).length / glucosaRows.length) * 100)
       : null;
 
-    // Llamar al microservicio RAG
+    // Llamar al microservicio RAG (con reintento automático para cold starts)
     let respuestaRAG;
     const startTime = Date.now();
 
+    // Pre-calentar el AI Service (por si está dormido en Railway)
     try {
-      const ragResponse = await axios.post(`${RAG_SERVICE_URL}/api/recommend`, {
-        mensaje,
-        perfil_salud: {
-          clasificacion_dm2:        perfil.clasificacion_dm2,
-          hemoglobina_glicosilada:  perfil.hemoglobina_glicosilada,
-          usa_insulina:             perfil.usa_insulina,
-          usa_metformina:           perfil.usa_metformina,
-          alergias:                 perfil.alergias,
-          intolerancias:            perfil.intolerancias,
-          restricciones:            perfil.restricciones_dieteticas,
-          carbohidratos_max:        perfil.carbohidratos_por_comida_max_g,
-          calorias_max:             perfil.calorias_diarias_max,
-          // Contexto glucémico real del paciente
-          glucosa_reciente:         glucosaRows.map(r => ({
-            valor:  r.valor_mg_dl,
-            tipo:   r.tipo_medicion,
-            fecha:  r.fecha_medicion
-          })),
-          glucosa_promedio_reciente: promedioGlucosa,
-          hba1c_estimada:           eHbA1c,
-          tiempo_en_rango_pct:      tirPct,
-        },
-        historial: historial.rows.reverse(),
-      }, { timeout: 60000 });
+      await axios.get(`${RAG_SERVICE_URL}/ping`, { timeout: 10000 });
+    } catch (_) { /* ignorar — si falla, continuamos igual */ }
 
+    const ragPayload = {
+      mensaje,
+      perfil_salud: {
+        clasificacion_dm2:        perfil.clasificacion_dm2,
+        hemoglobina_glicosilada:  perfil.hemoglobina_glicosilada,
+        usa_insulina:             perfil.usa_insulina,
+        usa_metformina:           perfil.usa_metformina,
+        alergias:                 perfil.alergias,
+        intolerancias:            perfil.intolerancias,
+        restricciones:            perfil.restricciones_dieteticas,
+        carbohidratos_max:        perfil.carbohidratos_por_comida_max_g,
+        calorias_max:             perfil.calorias_diarias_max,
+        glucosa_reciente:         glucosaRows.map(r => ({
+          valor:  r.valor_mg_dl,
+          tipo:   r.tipo_medicion,
+          fecha:  r.fecha_medicion
+        })),
+        glucosa_promedio_reciente: promedioGlucosa,
+        hba1c_estimada:           eHbA1c,
+        tiempo_en_rango_pct:      tirPct,
+      },
+      historial: historial.rows.reverse(),
+    };
+
+    const callRAG = () => axios.post(
+      `${RAG_SERVICE_URL}/api/recommend`,
+      ragPayload,
+      { timeout: 55000 }
+    );
+
+    try {
+      let ragResponse;
+      try {
+        // Primer intento
+        ragResponse = await callRAG();
+      } catch (firstError) {
+        // Si falla (cold start), esperar 3s y reintentar
+        console.warn('⚠️ RAG primer intento fallido, reintentando en 3s...', firstError.message);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        ragResponse = await callRAG();
+      }
       respuestaRAG = ragResponse.data;
     } catch (ragError) {
-      console.error('⚠️ RAG service error:', ragError.message);
+      console.error('⚠️ RAG service error (ambos intentos):', ragError.message);
       // Fallback: respuesta sin RAG
       respuestaRAG = {
         respuesta: 'Lo siento, el servicio de recomendaciones no está disponible temporalmente. Por favor, intenta de nuevo en unos momentos.',
