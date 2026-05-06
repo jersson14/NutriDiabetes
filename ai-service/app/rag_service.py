@@ -235,7 +235,7 @@ class RAGService:
         """Traduce una query al inglés para mejorar la búsqueda en PDFs clínicos en inglés."""
         try:
             resp = self.openai_client.chat.completions.create(
-                model=self.model,
+                model="gpt-4o-mini",  # Más rápido que gpt-4 para traducciones simples
                 messages=[
                     {"role": "system", "content": "Translate the following medical query to English. Return only the translation, nothing else."},
                     {"role": "user", "content": text}

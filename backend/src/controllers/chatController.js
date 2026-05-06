@@ -124,7 +124,7 @@ const sendMessage = async (req, res) => {
           tiempo_en_rango_pct:      tirPct,
         },
         historial: historial.rows.reverse(),
-      }, { timeout: 30000 });
+      }, { timeout: 60000 });
 
       respuestaRAG = ragResponse.data;
     } catch (ragError) {
