@@ -484,15 +484,15 @@ export default function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Escribe tu consulta..."
+                placeholder={botStatus === 'warming' ? '⏳ NutriBot iniciando, espera un momento...' : 'Escribe tu consulta...'}
                 rows={1}
-                disabled={loading || isStreaming}
+                disabled={loading || isStreaming || botStatus === 'warming'}
                 className="flex-1 bg-transparent outline-none resize-none text-sm text-gray-800 placeholder-gray-400 py-1.5"
                 style={{ maxHeight: '100px', fontSize: '16px' }}
               />
               <button
                 onClick={sendMessage}
-                disabled={!input.trim() || loading || isStreaming}
+                disabled={!input.trim() || loading || isStreaming || botStatus === 'warming'}
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 active:scale-90"
                 style={{ background: '#005BAC' }}
               >
