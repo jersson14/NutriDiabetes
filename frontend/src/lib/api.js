@@ -4,12 +4,30 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 30000,
+  timeout: 60000,  // 60s para rutas normales
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor para agregar token JWT
+// Cliente especial para el chat RAG (respuestas largas + cold start)
+const chatApi = axios.create({
+  baseURL: API_URL,
+  timeout: 200000, // 200s — tiempo suficiente para TPCA + LLM + cold start
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Interceptor para agregar token JWT (api normal)
 api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+// Interceptor para agregar token JWT (chatApi)
+chatApi.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('accessToken');
     if (token) {
@@ -45,7 +63,7 @@ export const authAPI = {
 // ── Chat ──
 export const chatAPI = {
   sendMessage: (mensaje, conversacionId) =>
-    api.post('/chat/message', { mensaje, conversacionId }),
+    chatApi.post('/chat/message', { mensaje, conversacionId }),
   getConversaciones: () => api.get('/chat/conversaciones'),
   getConversacion: (id) => api.get(`/chat/conversacion/${id}`),
   deleteConversacion: (id) => api.delete(`/chat/conversacion/${id}`),
