@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { chatAPI } from '@/lib/api';
+import { chatAPI, api } from '@/lib/api';
 
 // ─── Panel de fuentes citadas por NutriBot ────────────────────────────────────
 function SourcesPanel({ fuentes }) {
@@ -91,6 +91,7 @@ export default function ChatPage() {
   const [streamingText, setStreamingText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+  const [botStatus, setBotStatus] = useState('warming'); // 'warming' | 'ready'
   // Fuentes pendientes de añadir al mensaje que está en streaming
   const pendingFuentesRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -116,6 +117,15 @@ export default function ChatPage() {
       rol: 'ASSISTANT',
       contenido: '¡Hola! 👋 Soy **NutriBot Perú**, tu asistente nutricional para Diabetes Tipo 2.\n\n¿En qué puedo ayudarte?\n\n🥗 **Recetas saludables** — _"Tengo pollo, quinua y brócoli"_\n📊 **Consultas nutricionales** — _"¿Cuál es el IG de la papa?"_\n💡 **Tips de salud** — _"¿Qué ejercicios me recomiendas?"_\n🍽️ **Food Sequencing** — _"¿En qué orden debo comer?"_'
     }]);
+    // Despertar el AI Service en segundo plano para evitar cold start
+    const warmup = async () => {
+      try {
+        await api.get('/chat/warmup');
+      } catch { /* ignorar */ } finally {
+        setBotStatus('ready');
+      }
+    };
+    warmup();
   }, []);
 
   useEffect(() => {
@@ -358,10 +368,17 @@ export default function ChatPage() {
           <div className="flex-1 min-w-0">
             <h1 className="font-semibold text-gray-800 flex items-center gap-1.5 text-sm md:text-base">
               <span>🤖</span> NutriBot
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full font-medium">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                RAG
-              </span>
+              {botStatus === 'warming' ? (
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-50 text-yellow-700 text-xs rounded-full font-medium">
+                  <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse"></span>
+                  Iniciando...
+                </span>
+              ) : (
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-full font-medium">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                  RAG
+                </span>
+              )}
             </h1>
             <p className="text-xs text-gray-400 hidden sm:block">TPCA 2025 · IDF Atlas 2025 · ADA Standards 2026</p>
           </div>

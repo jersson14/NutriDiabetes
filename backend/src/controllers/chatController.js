@@ -339,9 +339,24 @@ const deleteConversacion = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/chat/warmup
+ * Pre-calienta el AI Service (sin auth) — llamado por el frontend al cargar el chat
+ */
+const warmupService = async (req, res) => {
+  try {
+    await axios.get(`${RAG_SERVICE_URL}/ping`, { timeout: 8000 });
+    res.json({ status: 'warm' });
+  } catch {
+    // El servicio puede estar iniciando — no es error crítico
+    res.json({ status: 'warming' });
+  }
+};
+
 module.exports = {
   sendMessage,
   getConversaciones,
   getConversacion,
-  deleteConversacion
+  deleteConversacion,
+  warmupService
 };
