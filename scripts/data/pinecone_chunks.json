@@ -6193,7 +6193,7 @@
   },
   {
     "id": "c_35",
-    "text": "Alimento peruano: Lúcuma. Categoría TPCA: Frutas y derivados. Código: C 35. Composición por 100g de porción comestible: Energía 97.0 kcal. Proteínas 2.1g. Grasas 0.2g. Carbohidratos totales 34.9g. Carbohidratos disponibles 24.7g. Fibra dietaria 10.2g. Agua 61.7g. Calcio 16.0mg. Hierro 0.79mg. Vitamina C 0.77mg. Fósforo 26.0mg. Índice Glucémico (IG): 40. IG bajo, recomendado para diabetes. Clasificación DM2: RECOMENDADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú.",
+    "text": "Alimento peruano: Lúcuma. Categoría TPCA: Frutas y derivados. Código: C 35. Composición por 100g de porción comestible: Energía 97.0 kcal. Proteínas 2.1g. Grasas 0.2g. Carbohidratos totales 34.9g. Carbohidratos disponibles 24.7g. Fibra dietaria 10.2g. Agua 61.7g. Calcio 16.0mg. Hierro 0.79mg. Vitamina C 0.77mg. Fósforo 26.0mg. Índice Glucémico (IG): 40. IG bajo, recomendado para diabetes. Clasificación DM2: RECOMENDADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú Lúcuma fresca entera fruto natural sin procesar. IG 25 bajo. RECOMENDADO para DM2 como postre natural. No confundir con lúcuma en polvo ni harina de lúcuma.",
     "metadata": {
       "codigo_tpca": "C 35",
       "nombre": "Lúcuma",
@@ -6206,12 +6206,14 @@
       "indice_glucemico": 40,
       "nivel_recomendacion": "RECOMENDADO",
       "es_apto_diabeticos": true,
-      "fuente": "TPCA 2025 CENAN/INS"
+      "fuente": "TPCA 2025 CENAN/INS",
+      "sinonimos": "lúcuma fruta fresca, pouteria lucuma, fruta andina",
+      "nota": "Fruta fresca entera, no procesada, no deshidratada"
     }
   },
   {
     "id": "c_36",
-    "text": "Alimento peruano: Lúcuma, harina de. Categoría TPCA: Frutas y derivados. Código: C 36. Composición por 100g de porción comestible: Energía 329.0 kcal. Proteínas 4.0g. Grasas 2.4g. Carbohidratos totales 82.0g. Agua 9.3g. Calcio 92.0mg. Hierro 4.6mg. Vitamina C 11.6mg. Fósforo 186.0mg. Índice Glucémico (IG): 60. IG medio, consumir con moderación en diabetes. Clasificación DM2: MODERADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú.",
+    "text": "Alimento peruano: Lúcuma, harina de. Categoría TPCA: Frutas y derivados. Código: C 36. Composición por 100g de porción comestible: Energía 329.0 kcal. Proteínas 4.0g. Grasas 2.4g. Carbohidratos totales 82.0g. Agua 9.3g. Calcio 92.0mg. Hierro 4.6mg. Vitamina C 11.6mg. Fósforo 186.0mg. Índice Glucémico (IG): 60. IG medio, consumir con moderación en diabetes. Clasificación DM2: MODERADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú Harina de lúcuma deshidratada procesada en polvo. No es la fruta fresca. Para consultas de lúcuma FRESCA ver c_35.",
     "metadata": {
       "codigo_tpca": "C 36",
       "nombre": "Lúcuma, harina de",
@@ -6224,7 +6226,8 @@
       "indice_glucemico": 60,
       "nivel_recomendacion": "MODERADO",
       "es_apto_diabeticos": true,
-      "fuente": "TPCA 2025 CENAN/INS"
+      "fuente": "TPCA 2025 CENAN/INS",
+      "nota": "Lúcuma procesada deshidratada en polvo, no fruta fresca"
     }
   },
   {
@@ -12655,7 +12658,7 @@
   },
   {
     "id": "f_83",
-    "text": "Alimento peruano: Pollo, pechuga de, sin piel, frita en aceite vegetal, sin sal. Categoría TPCA: Carnes y derivados. Código: F 83. Composición por 100g de porción comestible: Energía 201.0 kcal. Proteínas 34.9g. Grasas 5.7g. Carbohidratos totales 0.1g. Agua 57.2g. Calcio 9.0mg. Hierro 0.57mg. Zinc 0.92mg. Fósforo 335.0mg. Sodio 64.0mg. Potasio 566.0mg. Índice Glucémico (IG): 0. IG bajo, recomendado para diabetes. Clasificación DM2: RECOMENDADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú.",
+    "text": "Alimento peruano: Pollo, pechuga de, sin piel, frita en aceite vegetal, sin sal. Categoría TPCA: Carnes y derivados. Código: F 83. Composición por 100g de porción comestible: Energía 201.0 kcal. Proteínas 34.9g. Grasas 5.7g. Carbohidratos totales 0.1g. Agua 57.2g. Calcio 9.0mg. Hierro 0.57mg. Zinc 0.92mg. Fósforo 335.0mg. Sodio 64.0mg. Potasio 566.0mg. Índice Glucémico (IG): 0. IG bajo, recomendado para diabetes. Clasificación DM2: RECOMENDADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú Pechuga frita en aceite, versión procesada. Para pechuga fresca cruda sin freír ver manual_pollo_pechuga_cruda.",
     "metadata": {
       "codigo_tpca": "F 83",
       "nombre": "Pollo, pechuga de, sin piel, frita en aceite vegetal, sin sal",
@@ -12668,7 +12671,8 @@
       "indice_glucemico": 0,
       "nivel_recomendacion": "RECOMENDADO",
       "es_apto_diabeticos": true,
-      "fuente": "TPCA 2025 CENAN/INS"
+      "fuente": "TPCA 2025 CENAN/INS",
+      "nota": "Frita en aceite vegetal, no es pechuga cruda sin procesar"
     }
   },
   {
@@ -15481,7 +15485,7 @@
   },
   {
     "id": "l_35",
-    "text": "Alimento peruano: Camote, hojuela frita en aceite vegetal, endulzado, envasado. Categoría TPCA: Azúcares y derivados. Código: L 35. Composición por 100g de porción comestible: Energía 483.0 kcal. Proteínas 4.6g. Grasas 26.0g. Carbohidratos totales 64.6g. Carbohidratos disponibles 57.5g. Fibra dietaria 7.2g. Agua 1.6g. Calcio 14.0mg. Hierro 3.11mg. Zinc 0.31mg. Fósforo 120.0mg. Sodio 206.0mg. Potasio 72.0mg. Índice Glucémico (IG): 61. IG medio, consumir con moderación en diabetes. Clasificación DM2: MODERADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú.",
+    "text": "Alimento peruano: Camote, hojuela frita en aceite vegetal, endulzado, envasado. Categoría TPCA: Azúcares y derivados. Código: L 35. Composición por 100g de porción comestible: Energía 483.0 kcal. Proteínas 4.6g. Grasas 26.0g. Carbohidratos totales 64.6g. Carbohidratos disponibles 57.5g. Fibra dietaria 7.2g. Agua 1.6g. Calcio 14.0mg. Hierro 3.11mg. Zinc 0.31mg. Fósforo 120.0mg. Sodio 206.0mg. Potasio 72.0mg. Índice Glucémico (IG): 61. IG medio, consumir con moderación en diabetes. Clasificación DM2: MODERADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: Tabla Peruana de Composición de Alimentos (TPCA) 2025, CENAN/INS, MINSA Perú Producto procesado industrialmente: hojuela chips frita en aceite. NO es camote fresco crudo. Para camote fresco ver manual_camote_amarillo_crudo.",
     "metadata": {
       "codigo_tpca": "L 35",
       "nombre": "Camote, hojuela frita en aceite vegetal, endulzado, envasado",
@@ -15494,7 +15498,8 @@
       "indice_glucemico": 61,
       "nivel_recomendacion": "MODERADO",
       "es_apto_diabeticos": true,
-      "fuente": "TPCA 2025 CENAN/INS"
+      "fuente": "TPCA 2025 CENAN/INS",
+      "nota": "Producto ultraprocesado frito, no es camote fresco crudo"
     }
   },
   {
@@ -15981,6 +15986,201 @@
       "nivel_recomendacion": "LIMITAR",
       "es_apto_diabeticos": false,
       "fuente": "TPCA 2025 CENAN/INS"
+    }
+  },
+  {
+    "id": "manual_olluco_001",
+    "text": "Alimento peruano: Olluco crudo. También conocido como: Papalisa, ulluco, melloco. Categoría: Raíces y tubérculos andinos. Composición por 100g de porción comestible: Energía 57.0 kcal. Proteínas 1.1g. Grasas 0.1g. Carbohidratos totales 13.4g. Fibra dietaria 1.0g. Calcio 3.0mg. Hierro 0.5mg. Vitamina C 11.0mg. Índice Glucémico (IG): 50 — BAJO. Carga Glucémica (CG): 6.7 — BAJA (CG = IG × carbohidratos / 100). Clasificación DM2: MODERADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: INS/MINSA TPCA (edición anterior) + FAO INCAP. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Olluco crudo",
+      "nombre_comun": "Papalisa, ulluco, melloco",
+      "categoria": "Raíces y tubérculos andinos",
+      "codigo_tpca": "MANUAL-01",
+      "energia_kcal": 57.0,
+      "proteinas_g": 1.1,
+      "carbohidratos_g": 13.4,
+      "fibra_g": 1.0,
+      "grasas_g": 0.1,
+      "calcio_mg": 3.0,
+      "hierro_mg": 0.5,
+      "vitamina_c_mg": 11.0,
+      "indice_glucemico": 50,
+      "carga_glucemica": 6.7,
+      "nivel_recomendacion": "MODERADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "papalisa, ulluco, melloco, ullucu, tubérculo andino",
+      "fuente": "INS/MINSA TPCA (edición anterior) + FAO INCAP"
+    }
+  },
+  {
+    "id": "manual_oca_001",
+    "text": "Alimento peruano: Oca cruda. También conocido como: Okka, oxalis tuberosa. Categoría: Raíces y tubérculos andinos. Composición por 100g de porción comestible: Energía 36.0 kcal. Proteínas 0.9g. Grasas 0.1g. Carbohidratos totales 8.2g. Fibra dietaria 1.0g. Calcio 6.0mg. Hierro 0.3mg. Vitamina C 37.0mg. Índice Glucémico (IG): 35 — MUY BAJO. Carga Glucémica (CG): 2.9 — BAJA (CG = IG × carbohidratos / 100). Clasificación DM2: RECOMENDADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: FAO/INCAP + CIP Centro Internacional de la Papa. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Oca cruda",
+      "nombre_comun": "Okka, oxalis tuberosa",
+      "categoria": "Raíces y tubérculos andinos",
+      "codigo_tpca": "MANUAL-02",
+      "energia_kcal": 36.0,
+      "proteinas_g": 0.9,
+      "carbohidratos_g": 8.2,
+      "fibra_g": 1.0,
+      "grasas_g": 0.1,
+      "calcio_mg": 6.0,
+      "hierro_mg": 0.3,
+      "vitamina_c_mg": 37.0,
+      "indice_glucemico": 35,
+      "carga_glucemica": 2.9,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "okka, tubérculo andino, oxalis tuberosa",
+      "fuente": "FAO/INCAP + CIP Centro Internacional de la Papa"
+    }
+  },
+  {
+    "id": "manual_mashua_001",
+    "text": "Alimento peruano: Mashua cruda. También conocido como: Mashwa, cubio, isaño. Categoría: Raíces y tubérculos andinos. Composición por 100g de porción comestible: Energía 52.0 kcal. Proteínas 1.5g. Grasas 0.2g. Carbohidratos totales 12.0g. Fibra dietaria 1.2g. Calcio 14.0mg. Hierro 0.7mg. Vitamina C 77.0mg. Índice Glucémico (IG): 40 — MUY BAJO. Carga Glucémica (CG): 4.8 — BAJA (CG = IG × carbohidratos / 100). Clasificación DM2: RECOMENDADO. Apto para pacientes con diabetes mellitus tipo 2. Fuente: CIP Centro Internacional de la Papa + FAO. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Mashua cruda",
+      "nombre_comun": "Mashwa, cubio, isaño",
+      "categoria": "Raíces y tubérculos andinos",
+      "codigo_tpca": "MANUAL-03",
+      "energia_kcal": 52.0,
+      "proteinas_g": 1.5,
+      "carbohidratos_g": 12.0,
+      "fibra_g": 1.2,
+      "grasas_g": 0.2,
+      "calcio_mg": 14.0,
+      "hierro_mg": 0.7,
+      "vitamina_c_mg": 77.0,
+      "indice_glucemico": 40,
+      "carga_glucemica": 4.8,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "mashwa, cubio, isaño, tubérculo andino",
+      "fuente": "CIP Centro Internacional de la Papa + FAO"
+    }
+  },
+  {
+    "id": "manual_camote_amarillo_crudo",
+    "text": "Alimento peruano: Camote amarillo crudo. También conocido como: Camote, batata, boniato, sweet potato. Categoría: Raíces y tubérculos. Composición por 100g: Energía 105.0 kcal. Proteínas 1.6g. Grasas 0.3g. Carbohidratos 24.3g. Fibra 3.0g. Índice Glucémico (IG): 54 — BAJO. Carga Glucémica (CG): 13.1 — MEDIA. Clasificación DM2: RECOMENDADO. Camote fresco crudo sin procesar, no frito, no deshidratado Fuente: INS/MINSA TPCA edición anterior + FAO INCAP. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Camote amarillo crudo",
+      "nombre_comun": "Camote, batata, boniato, sweet potato",
+      "categoria": "Raíces y tubérculos",
+      "codigo_tpca": "MANUAL-04",
+      "energia_kcal": 105.0,
+      "proteinas_g": 1.6,
+      "carbohidratos_g": 24.3,
+      "fibra_g": 3.0,
+      "grasas_g": 0.3,
+      "calcio_mg": 30.0,
+      "hierro_mg": 0.6,
+      "vitamina_c_mg": 22.7,
+      "indice_glucemico": 54,
+      "carga_glucemica": 13.1,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "batata, boniato, sweet potato, tubérculo andino",
+      "fuente": "INS/MINSA TPCA edición anterior + FAO INCAP",
+      "nota": "Camote fresco crudo sin procesar, no frito, no deshidratado"
+    }
+  },
+  {
+    "id": "manual_frijol_canario_crudo",
+    "text": "Alimento peruano: Frijol canario crudo. También conocido como: Fréjol canario, poroto, beans, legumbre, menestra. Categoría: Leguminosas y derivados. Composición por 100g: Energía 347.0 kcal. Proteínas 22.6g. Grasas 1.5g. Carbohidratos 66.4g. Fibra 15.2g. Índice Glucémico (IG): 31 — MUY BAJO. Carga Glucémica (CG): 20.6 — ALTA. Clasificación DM2: RECOMENDADO. Grano seco crudo, legumbre, menestra peruana, no es ají ni vegetal Fuente: INS/MINSA TPCA edición anterior + FAO INCAP. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Frijol canario crudo",
+      "nombre_comun": "Fréjol canario, poroto, beans, legumbre, menestra",
+      "categoria": "Leguminosas y derivados",
+      "codigo_tpca": "MANUAL-05",
+      "energia_kcal": 347.0,
+      "proteinas_g": 22.6,
+      "carbohidratos_g": 66.4,
+      "fibra_g": 15.2,
+      "grasas_g": 1.5,
+      "calcio_mg": 135.0,
+      "hierro_mg": 7.0,
+      "vitamina_c_mg": 0.0,
+      "indice_glucemico": 31,
+      "carga_glucemica": 20.6,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "fréjol, poroto, menestra, legumbre, bean",
+      "fuente": "INS/MINSA TPCA edición anterior + FAO INCAP",
+      "nota": "Grano seco crudo, legumbre, menestra peruana, no es ají ni vegetal"
+    }
+  },
+  {
+    "id": "manual_lenteja_cruda",
+    "text": "Alimento peruano: Lenteja cruda. También conocido como: Lenteja, lens culinaris, legumbre, menestra. Categoría: Leguminosas y derivados. Composición por 100g: Energía 353.0 kcal. Proteínas 25.8g. Grasas 1.8g. Carbohidratos 60.1g. Fibra 11.4g. Índice Glucémico (IG): 29 — MUY BAJO. Carga Glucémica (CG): 17.4 — MEDIA. Clasificación DM2: RECOMENDADO. Fuente: INS/MINSA TPCA edición anterior + FAO INCAP. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Lenteja cruda",
+      "nombre_comun": "Lenteja, lens culinaris, legumbre, menestra",
+      "categoria": "Leguminosas y derivados",
+      "codigo_tpca": "MANUAL-06",
+      "energia_kcal": 353.0,
+      "proteinas_g": 25.8,
+      "carbohidratos_g": 60.1,
+      "fibra_g": 11.4,
+      "grasas_g": 1.8,
+      "calcio_mg": 51.0,
+      "hierro_mg": 7.6,
+      "vitamina_c_mg": 4.0,
+      "indice_glucemico": 29,
+      "carga_glucemica": 17.4,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "lentejas, lens culinaris, menestra, legumbre",
+      "fuente": "INS/MINSA TPCA edición anterior + FAO INCAP"
+    }
+  },
+  {
+    "id": "manual_lenteja_cocida",
+    "text": "Alimento peruano: Lenteja cocida. También conocido como: Lenteja hervida, lentejas guisadas, menestra cocida. Categoría: Leguminosas y derivados. Composición por 100g: Energía 114.0 kcal. Proteínas 8.4g. Grasas 0.6g. Carbohidratos 19.5g. Fibra 4.0g. Índice Glucémico (IG): 29 — MUY BAJO. Carga Glucémica (CG): 5.7 — BAJA. Clasificación DM2: RECOMENDADO. Fuente: INS/MINSA TPCA edición anterior + FAO INCAP. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Lenteja cocida",
+      "nombre_comun": "Lenteja hervida, lentejas guisadas, menestra cocida",
+      "categoria": "Leguminosas y derivados",
+      "codigo_tpca": "MANUAL-07",
+      "energia_kcal": 114.0,
+      "proteinas_g": 8.4,
+      "carbohidratos_g": 19.5,
+      "fibra_g": 4.0,
+      "grasas_g": 0.6,
+      "calcio_mg": 19.0,
+      "hierro_mg": 2.4,
+      "vitamina_c_mg": 1.5,
+      "indice_glucemico": 29,
+      "carga_glucemica": 5.7,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "lentejas hervidas, menestra, legumbre cocida",
+      "fuente": "INS/MINSA TPCA edición anterior + FAO INCAP"
+    }
+  },
+  {
+    "id": "manual_pollo_pechuga_cruda",
+    "text": "Alimento peruano: Pollo, pechuga de, sin piel, cruda. También conocido como: Pechuga de pollo fresca, chicken breast, carne blanca. Categoría: Carnes y derivados. Composición por 100g: Energía 121.0 kcal. Proteínas 22.5g. Grasas 2.8g. Carbohidratos 0.0g. Fibra 0.0g. Clasificación DM2: RECOMENDADO. Pechuga cruda sin piel sin freír, proteína magra baja en grasa Fuente: INS/MINSA TPCA edición anterior + FAO INCAP. Nota: dato no incluido en TPCA 2025 CENAN/INS.",
+    "metadata": {
+      "nombre": "Pollo, pechuga de, sin piel, cruda",
+      "nombre_comun": "Pechuga de pollo fresca, chicken breast, carne blanca",
+      "categoria": "Carnes y derivados",
+      "codigo_tpca": "MANUAL-08",
+      "energia_kcal": 121.0,
+      "proteinas_g": 22.5,
+      "carbohidratos_g": 0.0,
+      "fibra_g": 0.0,
+      "grasas_g": 2.8,
+      "calcio_mg": 11.0,
+      "hierro_mg": 0.7,
+      "vitamina_c_mg": 0.0,
+      "indice_glucemico": 0,
+      "carga_glucemica": 0.0,
+      "nivel_recomendacion": "RECOMENDADO",
+      "es_apto_diabeticos": true,
+      "sinonimos": "pechuga de pollo, chicken breast, carne blanca",
+      "fuente": "INS/MINSA TPCA edición anterior + FAO INCAP",
+      "nota": "Pechuga cruda sin piel sin freír, proteína magra baja en grasa"
     }
   }
 ]

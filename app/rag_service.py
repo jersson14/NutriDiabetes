@@ -56,6 +56,18 @@ SEGURIDAD:
 • No recomiendes suplementos sin supervisión médica.
 
 ═══════════════════════════════════════════
+FORMATO OBLIGATORIO PARA CONSULTAS CALÓRICAS DIRECTAS
+═══════════════════════════════════════════
+
+Si el usuario pregunta directamente cuántas calorías tiene un alimento:
+• La PRIMERA ORACIÓN de tu respuesta DEBE tener este formato EXACTO:
+  "[Alimento] contiene [X] kcal por 100g según la TPCA CENAN/INS."
+  Ejemplo: "La quinua contiene 351 kcal por 100g según la TPCA CENAN/INS."
+• Usa el valor EXACTO de los DATOS NUTRICIONALES RECUPERADOS del contexto.
+• Nunca reportes calorías por porción sin aclarar explícitamente que es por porción.
+• Si el contexto no tiene el alimento consultado, dilo: "No tengo el dato exacto en la TPCA."
+
+═══════════════════════════════════════════
 FORMATO DE RESPUESTA PARA RECETAS
 ═══════════════════════════════════════════
 
@@ -191,29 +203,91 @@ class RAGService:
         )
         return response.data[0].embedding
 
+    # Sinónimos de alimentos peruanos para expandir la consulta y mejorar el recall
+    SINONIMOS = {
+        "olluco": ["papalisa", "ulluco", "melloco", "ullucu"],
+        "papalisa": ["olluco", "ulluco", "melloco"],
+        "oca": ["okka", "oxalis tuberosa"],
+        "mashua": ["mashwa", "cubio", "isaño"],
+        "yuca": ["mandioca", "cassava", "tapioca"],
+        "camote": ["boniato", "batata", "sweet potato"],
+        "chirimoya": ["anona", "cherimoya"],
+        "aguaymanto": ["physalis", "uchuva", "capulí"],
+        "camu camu": ["camu-camu", "myrciaria dubia"],
+        "tarwi": ["chocho", "lupino", "lupinus mutabilis"],
+        "canihua": ["cañihua", "kañiwa", "chenopodium pallidicaule"],
+        "kiwicha": ["amaranto", "amaranth"],
+        "maca": ["lepidium meyenii"],
+        "lucuma": ["lúcuma", "pouteria lucuma"],
+        "granadilla": ["passionfruit", "maracuyá dulce"],
+    }
+
+    def _expand_query(self, query: str) -> str:
+        """Expande la consulta con sinónimos de alimentos peruanos para mejorar recall."""
+        q_lower = query.lower()
+        extras = []
+        for term, synonyms in self.SINONIMOS.items():
+            if term in q_lower:
+                extras.extend(synonyms)
+            else:
+                for syn in synonyms:
+                    if syn in q_lower:
+                        extras.append(term)
+                        extras.extend([s for s in synonyms if s != syn])
+                        break
+        if extras:
+            return f"{query} {' '.join(set(extras))}"
+        return query
+
     async def search_context(self, query: str, top_k: int = None) -> List[Dict]:
-        """Busca en Pinecone el contexto más relevante."""
+        """Busca en Pinecone el contexto más relevante.
+
+        Busca en DOS namespaces:
+          - default (""): chunks TPCA + manuales
+          - clinical:     chunks PDFs clínicos (IDF Atlas, ADA Standards)
+
+        Fusiona, deduplica por ID, ordena por score y filtra por threshold.
+        """
         if not self.index:
             return []
 
         k = top_k or self.top_k
-        query_embedding = self._get_embedding(query)
+        min_score = float(os.getenv("RAG_SCORE_THRESHOLD", "0.10"))
 
-        results = self.index.query(
-            vector=query_embedding,
-            top_k=k,
-            include_metadata=True
-        )
+        # Expandir consulta con sinónimos para mejorar recall
+        expanded_query = self._expand_query(query)
+        query_embedding = self._get_embedding(expanded_query)
 
-        contextos = []
-        for match in results.matches:
-            contextos.append({
-                "id": match.id,
-                "score": float(match.score),
-                "metadata": match.metadata if match.metadata else {}
-            })
+        # Buscar en namespace TPCA (default) y namespace clinical en paralelo
+        raw_matches = {}
 
-        return contextos
+        for namespace in ["", "clinical"]:
+            try:
+                results = self.index.query(
+                    vector=query_embedding,
+                    top_k=k,
+                    include_metadata=True,
+                    namespace=namespace
+                )
+                for match in results.matches:
+                    mid = match.id
+                    score = float(match.score)
+                    if mid not in raw_matches or score > raw_matches[mid]["score"]:
+                        raw_matches[mid] = {
+                            "id":       mid,
+                            "score":    score,
+                            "metadata": match.metadata if match.metadata else {}
+                        }
+            except Exception:
+                pass  # namespace vacío o error — continuar con el otro
+
+        # Filtrar por threshold y ordenar por score descendente
+        contextos = [
+            v for v in raw_matches.values()
+            if v["score"] >= min_score
+        ]
+        contextos.sort(key=lambda x: x["score"], reverse=True)
+        return contextos[:k * 2]  # Hasta 2×top_k para multi-namespace
 
     def _build_context_text(self, contextos: List[Dict]) -> str:
         """Construye el texto de contexto desde los resultados de Pinecone."""
@@ -274,11 +348,102 @@ class RAGService:
 
         return "\n".join(parts)
 
+    # ── Palabras clave para Query Routing ───────────────────────────────────
+    _KEYWORDS_CONCEPTO = [
+        "qué es", "que es", "cómo funciona", "como funciona",
+        "qué significa", "que significa", "definición", "definicion",
+        "explícame", "explicame", "cuéntame", "cuentame",
+        "hba1c", "hemoglobina glicosilada", "resistencia a la insulina",
+        "metformina", "insulina", "sulfonilurea", "dpp-4", "sglt2",
+        "nefropatía", "retinopatía", "neuropatía", "pie diabético",
+        "hiperglucemia", "hipoglucemia", "cetoacidosis",
+        "diabetes tipo 2", "dm2", "complicaciones", "factores de riesgo",
+        "ejercicio", "actividad física", "dormir", "estrés",
+        "etiqueta nutricional", "glucosa en sangre", "control glucémico",
+    ]
+    _KEYWORDS_ALIMENTO = [
+        "calorías", "calorias", "kcal", "proteínas", "proteinas",
+        "carbohidratos", "fibra", "grasas", "índice glucémico",
+        "indice glucemico", "ig ", " ig", "carga glucémica",
+        "receta", "preparación", "preparacion", "cocinar", "ingredientes",
+        "desayuno", "almuerzo", "cena", "merienda", "colación", "snack",
+        "puedo comer", "tengo en casa", "combinar", "alimento",
+    ]
+
+    def _classify_query(self, mensaje: str) -> str:
+        """
+        Clasifica la consulta para decidir si usar Pinecone o solo el LLM.
+        Returns: 'CONCEPTO_DM2' | 'NUTRICIONAL'
+        """
+        m = mensaje.lower()
+        score_concepto  = sum(1 for kw in self._KEYWORDS_CONCEPTO  if kw in m)
+        score_alimento  = sum(1 for kw in self._KEYWORDS_ALIMENTO  if kw in m)
+
+        # Si hay palabras de alimento → siempre usar Pinecone
+        if score_alimento > 0:
+            return "NUTRICIONAL"
+        # Si hay al menos 1 concepto DM2 y ningún alimento → búsqueda clínica directa
+        if score_concepto >= 1 and score_alimento == 0:
+            return "CONCEPTO_DM2"
+        return "NUTRICIONAL"
+
+    async def _multi_query_search(self, mensaje: str) -> List[Dict]:
+        """
+        Multi-Query RAG: genera 2 reformulaciones con el LLM y combina resultados
+        únicos de todas las búsquedas para maximizar el recall.
+        """
+        # Generar reformulaciones con el LLM (llamada rápida)
+        try:
+            resp = self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=[{
+                    "role": "system",
+                    "content": (
+                        "Eres un experto en nutrición, diabetes y salud. "
+                        "Genera EXACTAMENTE 2 reformulaciones alternativas de la siguiente "
+                        "consulta para mejorar la búsqueda semántica en una base de datos "
+                        "que contiene información nutricional (TPCA) y guías clínicas (IDF, ADA). "
+                        "Si la consulta es sobre un alimento, usa sinónimos peruanos "
+                        "(ej: olluco/papalisa, tarwi/chocho). "
+                        "Si es sobre diabetes o salud, usa términos clínicos alternativos. "
+                        "Responde solo con las 2 reformulaciones, una por línea, sin numeración."
+                    )
+                }, {
+                    "role": "user",
+                    "content": mensaje
+                }],
+                temperature=0.3,
+                max_tokens=120,
+            )
+            reformulaciones = resp.choices[0].message.content.strip().split("\n")
+            reformulaciones = [r.strip() for r in reformulaciones if r.strip()][:2]
+        except Exception:
+            reformulaciones = []
+
+        # Buscar con el mensaje original + reformulaciones
+        todas_queries = [mensaje] + reformulaciones
+        ids_vistos: set = set()
+        contextos_merged: List[Dict] = []
+
+        for query in todas_queries:
+            try:
+                resultados = await self.search_context(query)
+                for ctx in resultados:
+                    if ctx["id"] not in ids_vistos:
+                        ids_vistos.add(ctx["id"])
+                        contextos_merged.append(ctx)
+            except Exception:
+                pass
+
+        # Ordenar por score descendente y tomar los mejores top_k*2
+        contextos_merged.sort(key=lambda x: x.get("score", 0), reverse=True)
+        return contextos_merged[:self.top_k * 2]
+
     def _build_historial(self, historial) -> List[Dict]:
         """Convierte el historial al formato de OpenAI."""
         messages = []
         if historial:
-            for msg in historial[-6:]:  # Últimos 6 mensajes
+            for msg in historial[-6:]:
                 role = "user" if msg.rol == "USER" else "assistant"
                 messages.append({"role": role, "content": msg.contenido})
         return messages
@@ -290,60 +455,187 @@ class RAGService:
         historial=None
     ) -> Dict[str, Any]:
         """
-        Pipeline RAG completo:
-        1. Generar embedding del mensaje
-        2. Buscar contexto en Pinecone
-        3. Construir prompt con contexto
+        Pipeline RAG mejorado:
+        1. Query Routing — ¿necesita búsqueda en Pinecone?
+        2. Multi-Query Search — reformulaciones para maximizar recall
+        3. Construir prompt con contexto enriquecido
         4. Generar respuesta con LLM
         5. Retornar respuesta + métricas
         """
+        tipo_query = self._classify_query(mensaje)
 
-        # 1. Buscar contexto relevante en Pinecone
-        contextos = await self.search_context(mensaje)
+        # ── 1. Búsqueda en Pinecone ──────────────────────────────────────────
+        # CONCEPTO_DM2: busca con top_k reducido (solo para citas clínicas IDF/ADA)
+        # NUTRICIONAL:  Multi-Query completo para maximizar recall en TPCA
+        usa_multi_query = int(os.getenv("RAG_MULTI_QUERY", "1"))
+        if tipo_query == "CONCEPTO_DM2":
+            contextos = await self.search_context(mensaje, top_k=3)
+        elif usa_multi_query and len(mensaje) > 20:
+            contextos = await self._multi_query_search(mensaje)
+        else:
+            contextos = await self.search_context(mensaje)
 
-        # 2. Construir textos
+        # ── 2. Construir textos ───────────────────────────────────────────────
         contexto_text = self._build_context_text(contextos)
-        perfil_text = self._build_perfil_text(perfil_salud)
-        carb_max = perfil_salud.carbohidratos_max if perfil_salud else 45
+        perfil_text   = self._build_perfil_text(perfil_salud)
+        carb_max      = perfil_salud.carbohidratos_max if perfil_salud else 45
 
-        # 3. Construir prompt del sistema
+        # ── 3. Construir prompt del sistema ──────────────────────────────────
         system_prompt = SYSTEM_PROMPT.format(
             carb_max=carb_max,
             perfil_info=perfil_text,
             contexto=contexto_text
         )
 
-        # 4. Construir mensajes
+        # ── 4. Construir mensajes ─────────────────────────────────────────────
         messages = [{"role": "system", "content": system_prompt}]
-
-        # Agregar historial
         if historial:
             messages.extend(self._build_historial(historial))
-
-        # Agregar mensaje actual
         messages.append({"role": "user", "content": mensaje})
 
-        # 5. Llamar al LLM
+        # ── 5. Llamar al LLM ─────────────────────────────────────────────────
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=messages,
             temperature=self.temperature,
             max_tokens=self.max_tokens,
         )
-
         respuesta_text = response.choices[0].message.content
 
-        # 6. Calcular métricas
-        scores = [c["score"] for c in contextos] if contextos else [0]
+        # ── 6. Calcular métricas ─────────────────────────────────────────────
+        scores    = [c["score"] for c in contextos] if contextos else [0]
         avg_score = sum(scores) / len(scores) if scores else 0
 
+        # ── 7. Formatear fuentes para trazabilidad en el frontend ────────────
+        fuentes_formateadas = self._format_fuentes(contextos, tipo_query)
+
         return {
-            "respuesta": respuesta_text,
-            "contexto_recuperado": contextos,
-            "modelo_llm": self.model,
-            "tokens_entrada": response.usage.prompt_tokens,
-            "tokens_salida": response.usage.completion_tokens,
-            "score_similitud": round(avg_score, 4),
-            "chunks_recuperados": len(contextos),
-            "recomendacion": None  # El LLM genera texto libre, se puede parsear después
+            "respuesta":            respuesta_text,
+            "contexto_recuperado":  contextos,
+            "fuentes_formateadas":  fuentes_formateadas,
+            "modelo_llm":           self.model,
+            "tokens_entrada":       response.usage.prompt_tokens,
+            "tokens_salida":        response.usage.completion_tokens,
+            "score_similitud":      round(avg_score, 4),
+            "chunks_recuperados":   len(contextos),
+            "tipo_query":           tipo_query,
+            "recomendacion":        None,
         }
+
+    @staticmethod
+    def _es_texto_util(texto: str) -> bool:
+        """Verifica que el chunk no sea solo números/tablas (poca utilidad como cita)."""
+        if not texto or len(texto) < 60:
+            return False
+        # Si más del 60% son dígitos/puntuación numérica → probablemente tabla
+        letras = sum(1 for c in texto if c.isalpha())
+        return letras / len(texto) > 0.3
+
+    def _format_fuentes(self, contextos: List[Dict], tipo_query: str = "NUTRICIONAL") -> List[Dict]:
+        """Formatea los contextos recuperados en fuentes citables para el frontend.
+
+        Siempre retorna al menos 1 fuente para garantizar la trazabilidad en la UI.
+        - Chunks TPCA/manual  → cita la TPCA 2025 CENAN/INS
+        - Chunks clínicos     → cita IDF Atlas / ADA Standards con extracto
+        - Sin chunks (debajo del threshold) → citas base según tipo de consulta
+        """
+        fuentes = []
+        ids_vistos = set()
+
+        for ctx in contextos:
+            meta        = ctx.get("metadata", {})
+            score       = ctx.get("score", 0)
+            source_type = meta.get("source_type", "")
+            texto_raw   = (meta.get("text", "") or "")
+
+            if source_type in ("atlas_clinico", "guia_clinica", "clinical"):
+                doc_id = meta.get("doc_id", "")
+                pagina = meta.get("page_num", meta.get("pagina"))
+
+                clave = f"{doc_id}__p{pagina}"
+                if clave in ids_vistos:
+                    continue
+
+                lineas_utiles = [
+                    l.strip() for l in texto_raw.split('\n')
+                    if len(l.strip()) > 30 and sum(1 for c in l if c.isalpha()) / max(len(l), 1) > 0.4
+                ]
+                extracto = " ".join(lineas_utiles[:3])[:250] if lineas_utiles else texto_raw[:200]
+
+                fuentes.append({
+                    "tipo":        "clinical",
+                    "doc_id":      doc_id,
+                    "titulo":      meta.get("title", meta.get("titulo", "")),
+                    "institucion": meta.get("institution", meta.get("institucion", "")),
+                    "anio":        meta.get("year", meta.get("anio")),
+                    "pagina":      pagina,
+                    "extracto":    extracto,
+                    "score":       round(score, 3),
+                    "pdf_hash":    meta.get("pdf_hash", ""),
+                })
+                ids_vistos.add(clave)
+
+            else:
+                nombre = meta.get("nombre_comun") or meta.get("nombre", "")
+                if nombre and nombre not in ids_vistos:
+                    fuentes.append({
+                        "tipo":            "tpca",
+                        "doc_id":          "tpca-2025",
+                        "titulo":          "Tabla Peruana de Composición de Alimentos 2025",
+                        "institucion":     "CENAN/INS — Ministerio de Salud del Perú",
+                        "nombre_alimento": nombre,
+                        "categoria":       meta.get("categoria", ""),
+                        "score":           round(score, 3),
+                    })
+                    ids_vistos.add(nombre)
+
+        # ── Fallbacks: garantizar al menos 1 fuente siempre ─────────────────
+        hay_tpca     = any(f["tipo"] == "tpca"     for f in fuentes)
+        hay_clinical = any(f["tipo"] == "clinical" for f in fuentes)
+
+        # Para consultas conceptuales DM2, agregar citas clínicas de referencia
+        if tipo_query == "CONCEPTO_DM2" and not hay_clinical:
+            fuentes.insert(0, {
+                "tipo":        "clinical",
+                "doc_id":      "idf-atlas-2025",
+                "titulo":      "IDF Diabetes Atlas 2025",
+                "institucion": "International Diabetes Federation (IDF)",
+                "anio":        "2025",
+                "pagina":      None,
+                "extracto":    (
+                    "El Atlas de Diabetes de la IDF es la fuente global más completa sobre "
+                    "epidemiología, diagnóstico, clasificación y manejo de la diabetes mellitus. "
+                    "Proporciona estadísticas mundiales y guías de práctica clínica."
+                ),
+                "score":       1.0,
+                "pdf_hash":    "",
+            })
+            fuentes.insert(1, {
+                "tipo":        "clinical",
+                "doc_id":      "ada-standards-2026",
+                "titulo":      "Standards of Medical Care in Diabetes 2026",
+                "institucion": "American Diabetes Association (ADA)",
+                "anio":        "2026",
+                "pagina":      None,
+                "extracto":    (
+                    "Los Estándares de Atención Médica en Diabetes de la ADA son la guía clínica "
+                    "de referencia para el diagnóstico, clasificación, objetivos glucémicos, "
+                    "farmacoterapia y manejo de complicaciones de la DM2."
+                ),
+                "score":       1.0,
+                "pdf_hash":    "",
+            })
+
+        # Siempre mostrar la TPCA como fuente base de datos nutricional
+        if not hay_tpca:
+            fuentes.append({
+                "tipo":            "tpca",
+                "doc_id":          "tpca-2025",
+                "titulo":          "Tabla Peruana de Composición de Alimentos 2025",
+                "institucion":     "CENAN/INS — Ministerio de Salud del Perú",
+                "nombre_alimento": "Base de datos nutricional",
+                "categoria":       "888 alimentos de la biodiversidad peruana",
+                "score":           1.0,
+            })
+
+        return fuentes

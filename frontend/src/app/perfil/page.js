@@ -14,8 +14,12 @@ export default function PerfilPage() {
   const [saveError, setSaveError] = useState('');
   const [form, setForm] = useState({});
 
+  const [userName, setUserName] = useState('');
+
   useEffect(() => {
     if (!localStorage.getItem('accessToken')) { router.push('/login'); return; }
+    const u = localStorage.getItem('user');
+    if (u) setUserName(JSON.parse(u).nombre || JSON.parse(u).nombre_completo || '');
     loadPerfil();
   }, []);
 
@@ -57,12 +61,13 @@ export default function PerfilPage() {
 
   return (
     <div className="page-with-nav min-h-screen bg-[#EEF2F7] pb-32">
-      <Header 
+      <Header
         title="Mi Perfil DM2"
         subtitle="Gestiona tu información clínica"
         variant="purple"
         showChat={false}
         showLogout={true}
+        userName={userName}
       />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10 space-y-6">

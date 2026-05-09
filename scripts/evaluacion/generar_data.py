@@ -26,11 +26,110 @@ USO:
 ============================================================
 """
 
-import requests
-import pandas as pd
+import math
+import os
 import re
 import time
-import os
+
+import pandas as pd
+import requests
+
+
+# ──────────────────────────────────────────────────────────────
+# Helpers de extracción / métricas (espejo de comparacion_rag_vs_llms.py)
+# ──────────────────────────────────────────────────────────────
+
+def _is_finite_number(x) -> bool:
+    try:
+        return x is not None and math.isfinite(float(x))
+    except Exception:
+        return False
+
+
+def normalizar_kcal_pred(kcal) -> float:
+    """Valida rango 10–1000 kcal/100g y normaliza a float."""
+    if not _is_finite_number(kcal):
+        return float("nan")
+    v = float(kcal)
+    if v < 10.0 or v > 1000.0:
+        return float("nan")
+    v = round(v, 1)
+    if abs(v - round(v)) < 1e-9:
+        v = float(int(round(v)))
+    return float(v)
+
+
+def limpiar(texto: str) -> str:
+    if not isinstance(texto, str):
+        return ""
+    t = texto.lower()
+    t = re.sub(r"[^a-záéíóúüñ0-9 ]", " ", t)
+    t = re.sub(r"\s+", " ", t)
+    return t.strip()
+
+
+def _guess_food_name(pregunta: str) -> str:
+    """Heurística para extraer el alimento desde la pregunta."""
+    if not isinstance(pregunta, str):
+        return ""
+    p = pregunta.strip()
+    _patrones = [
+        r"(?:calor[ií]as|kcal)\s+tiene\s+la\s+(.+?)\s+(?:por|en)\s+100",
+        r"(?:calor[ií]as|kcal)\s+tiene\s+el\s+(.+?)\s+(?:por|en)\s+100",
+        r"tiene\s+la\s+(.+?)\s+(?:por|en)\s+100",
+        r"tiene\s+el\s+(.+?)\s+(?:por|en)\s+100",
+        r"tiene\s+(.+?)\s+(?:por|en)\s+100",
+    ]
+    for pat in _patrones:
+        m = re.search(pat, p, flags=re.IGNORECASE)
+        if m:
+            cand = re.sub(r"[¿?]", "", m.group(1)).strip()
+            return re.sub(r"\s+", " ", cand)
+    return ""
+
+
+def kcal_from_rag_context(contexto_recuperado, pregunta: str) -> float:
+    """Extrae kcal/100g directamente de la metadata Pinecone (fuente más precisa).
+
+    Prefiere chunks que coincidan con el nombre del alimento consultado,
+    luego mayor score de similitud coseno.
+    """
+    if not isinstance(contexto_recuperado, list) or not contexto_recuperado:
+        return float("nan")
+
+    food_guess = limpiar(_guess_food_name(pregunta))
+    candidatos = []
+
+    for item in contexto_recuperado:
+        if not isinstance(item, dict):
+            continue
+        meta = item.get("metadata") or {}
+        if not isinstance(meta, dict):
+            continue
+
+        energia = meta.get("energia_kcal")
+        if energia is None:
+            continue
+
+        energia_f = normalizar_kcal_pred(energia)
+        if not _is_finite_number(energia_f):
+            continue
+
+        try:
+            score_f = float(item.get("score", 0.0))
+        except Exception:
+            score_f = 0.0
+
+        nombre = limpiar(str(meta.get("nombre", "") or ""))
+        name_match = 1 if food_guess and (food_guess in nombre or nombre in food_guess) else 0
+
+        candidatos.append((name_match, score_f, energia_f))
+
+    if not candidatos:
+        return float("nan")
+
+    candidatos.sort(key=lambda t: (t[0], t[1]), reverse=True)
+    return float(candidatos[0][2])
 
 API_URL    = "http://localhost:8000/api/recommend"
 OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "data", "data.xlsx")
@@ -579,22 +678,52 @@ assert len(CASOS_PRUEBA) == 50, f"Se esperaban 50 casos, hay {len(CASOS_PRUEBA)}
 
 
 def extraer_kcal(texto: str) -> float:
-    """Extrae el primer valor calórico (kcal) del texto de respuesta RAG."""
+    """Extrae valor calórico priorizando patrones más específicos primero.
+
+    Orden de prioridad (mayor a menor especificidad):
+      1. "Calorías: 351 kcal"  — más específico, evita falsos positivos
+      2. "Energía: 351 kcal"
+      3. "Calorías: 351"       — sin unidad explícita
+      4. "Energía: 351"
+      5. "351 kcal"            — último recurso, puede dar falso positivo
+      6. "351 kilocalorías"
+
+    Valida rango 10–1000 kcal/100g para filtrar valores incoherentes.
+    """
+    if not isinstance(texto, str) or not texto.strip():
+        return float("nan")
+
+    if re.search(r"calor[ií]as\s*:\s*n/?a\b", texto, flags=re.IGNORECASE):
+        return float("nan")
+
     patrones = [
-        r'(\d{2,4}(?:\.\d+)?)\s*kcal',
-        r'(\d{2,4}(?:\.\d+)?)\s*kilocalorías',
-        r'[Cc]alorías[:\s]+(\d{2,4}(?:\.\d+)?)',
-        r'[Ee]nergía[:\s]+(\d{2,4}(?:\.\d+)?)',
+        r"[Cc]alor[ií]as\s*[:=]\s*(\d{2,4}(?:[.,]\d+)?)\s*kcal",
+        r"[Ee]nerg[ií]a\s*[:=]\s*(\d{2,4}(?:[.,]\d+)?)\s*kcal",
+        r"[Cc]alor[ií]as\s*[:=]\s*(\d{2,4}(?:[.,]\d+)?)",
+        r"[Ee]nerg[ií]a\s*[:=]\s*(\d{2,4}(?:[.,]\d+)?)",
+        r"(\d{2,4}(?:[.,]\d+)?)\s*kcal\b",
+        r"(\d{2,4}(?:[.,]\d+)?)\s*kilocalor[ií]as\b",
     ]
     for patron in patrones:
         match = re.search(patron, texto, re.IGNORECASE)
         if match:
-            return float(match.group(1))
+            raw = match.group(1).replace(",", ".")
+            try:
+                val = float(raw)
+                if 10.0 <= val <= 1000.0:
+                    return val
+            except Exception:
+                pass
     return float("nan")
 
 
-def llamar_rag(pregunta: str) -> dict:
-    """Llama al endpoint /api/recommend del servicio RAG."""
+def llamar_rag(pregunta: str, retries: int = 3, delay_base: float = 2.0) -> dict:
+    """Llama al endpoint /api/recommend con reintentos automáticos.
+
+    - 3 intentos con backoff exponencial (2s, 4s, 6s)
+    - Timeout 90s por intento (cubre cold-starts del servicio)
+    - Incluye _tiempo_ms en la respuesta para métricas
+    """
     payload = {
         "mensaje": pregunta,
         "perfil_salud": {
@@ -603,9 +732,20 @@ def llamar_rag(pregunta: str) -> dict:
         },
         "historial": [],
     }
-    respuesta = requests.post(API_URL, json=payload, timeout=60)
-    respuesta.raise_for_status()
-    return respuesta.json()
+    ultimo_error: Exception | None = None
+    for intento in range(retries):
+        try:
+            t0 = time.perf_counter()
+            resp = requests.post(API_URL, json=payload, timeout=90)
+            resp.raise_for_status()
+            data = resp.json()
+            data["_tiempo_ms"] = round((time.perf_counter() - t0) * 1000, 1)
+            return data
+        except Exception as e:
+            ultimo_error = e
+            if intento < retries - 1:
+                time.sleep(delay_base * (intento + 1))
+    raise ultimo_error  # type: ignore[misc]
 
 
 def main():
@@ -638,20 +778,32 @@ def main():
         try:
             resultado   = llamar_rag(caso["pregunta"])
             texto_rag   = resultado.get("respuesta", "")
-            kcal_rag    = extraer_kcal(texto_rag)
-            print(f"kcal: {kcal_rag:>6.1f}  (real: {caso['kcal_real']:>6.1f})")
+            ctx_rec     = resultado.get("contexto_recuperado")
+
+            # Fuente primaria: metadata exacta de Pinecone (sin ambigüedad)
+            kcal_ctx    = kcal_from_rag_context(ctx_rec, caso["pregunta"])
+            # Fuente secundaria: parseo del texto LLM (fallback)
+            kcal_txt    = extraer_kcal(texto_rag)
+            kcal_rag    = normalizar_kcal_pred(
+                kcal_ctx if _is_finite_number(kcal_ctx) else kcal_txt
+            )
+            fuente_kcal = "contexto" if _is_finite_number(kcal_ctx) else (
+                          "texto"    if _is_finite_number(kcal_txt) else "none")
+
+            print(f"kcal: {kcal_rag:>6.1f}  (real: {caso['kcal_real']:>6.1f})  [{fuente_kcal}]")
             filas.append({
                 "alimento":           caso["alimento"],
                 "pregunta":           caso["pregunta"],
                 "kcal_real":          caso["kcal_real"],
                 "kcal_rag":           kcal_rag,
+                "fuente_kcal":        fuente_kcal,
                 "texto_ref":          caso["texto_ref"],
                 "texto_rag":          texto_rag,
                 "score_similitud":    resultado.get("score_similitud"),
                 "chunks_recuperados": resultado.get("chunks_recuperados"),
                 "tokens_entrada":     resultado.get("tokens_entrada"),
                 "tokens_salida":      resultado.get("tokens_salida"),
-                "tiempo_ms":          resultado.get("tiempo_ms"),
+                "tiempo_ms":          resultado.get("_tiempo_ms"),
             })
             time.sleep(1)
         except Exception as e:
@@ -661,6 +813,7 @@ def main():
                 "pregunta":           caso["pregunta"],
                 "kcal_real":          caso["kcal_real"],
                 "kcal_rag":           float("nan"),
+                "fuente_kcal":        "error",
                 "texto_ref":          caso["texto_ref"],
                 "texto_rag":          f"ERROR: {e}",
                 "score_similitud":    None,
@@ -674,10 +827,16 @@ def main():
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
     df.to_excel(OUTPUT_PATH, index=False)
 
-    exitosos = df["kcal_rag"].notna().sum()
+    exitosos    = df["kcal_rag"].notna().sum()
+    desde_ctx   = (df.get("fuente_kcal", pd.Series()) == "contexto").sum()
+    desde_texto = (df.get("fuente_kcal", pd.Series()) == "texto").sum()
+    errores     = (df.get("fuente_kcal", pd.Series()) == "error").sum()
     print()
     print("=" * 65)
-    print(f"  Casos completados: {exitosos}/{len(CASOS_PRUEBA)}")
+    print(f"  Casos con kcal válida:  {exitosos}/{len(CASOS_PRUEBA)}")
+    print(f"    Fuente contexto:      {desde_ctx} (metadata Pinecone)")
+    print(f"    Fuente texto:         {desde_texto} (parse texto LLM)")
+    print(f"    Errores/sin dato:     {errores}")
     print(f"  Archivo guardado:  {OUTPUT_PATH}")
     print()
     print("  Siguiente paso:")

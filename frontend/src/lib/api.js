@@ -98,4 +98,26 @@ export const dashboardAPI = {
   sendFeedback: (data) => api.post('/dashboard/feedback', data),
 };
 
+// ── Comidas ──
+export const comidasAPI = {
+  registrar: (data) => api.post('/comidas', data),
+  getHoy: () => api.get('/comidas'),
+  eliminar: (id) => api.delete(`/comidas/${id}`),
+};
+
+// ── Admin ──
+export const adminAPI = {
+  getStats:            ()           => api.get('/admin/stats'),
+  getUsuarios:         (params)     => api.get('/admin/usuarios', { params }),
+  getMetricasRAG:      ()           => api.get('/admin/metricas-rag'),
+  getConsultas:        (limit, page) => api.get('/admin/consultas', { params: { limit, page } }),
+  getLogs:             (limit)      => api.get('/admin/logs', { params: { limit } }),
+  toggleUsuarioActivo: (id, activo) => api.put(`/admin/usuarios/${id}/activo`, { activo }),
+  // Gestión de alimentos
+  getAlimentos:   (params) => api.get('/admin/alimentos', { params }),
+  crearAlimento:  (data)   => api.post('/admin/alimentos', data),
+  eliminarAlimento:(id)    => api.delete(`/admin/alimentos/${id}`),
+};
+
+export { api };
 export default api;

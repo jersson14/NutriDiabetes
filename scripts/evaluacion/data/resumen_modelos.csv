@@ -1,10 +1,10 @@
 ﻿modelo,n,n_mape,mape_promedio,mape_std,coseno_promedio,coseno_std,tiempo_promedio_ms,tiempo_std_ms,kpi,valor
-RAG,50.0,50.0,65.89053253561829,119.52670095250134,0.2285180517640891,0.0634584105392761,17210.0973339998,6163.5505715424415,,
-GPT,50.0,47.0,26.68659039783855,47.60806912880198,0.16441262800882092,0.04937777261820047,5012.001648000005,1391.7131531425866,,
-Gemini,50.0,23.0,12.034344491142141,14.599086587724493,0.11860406915076897,0.0644232178001143,3748.7582041661276,295.98842783166555,,
-KPI,,,,,,,,,mejor_mape,Gemini
+RAG,50.0,50.0,17.0716018744866,33.085279004054684,0.2764779021231,0.09735544467391422,8899.174086000057,1720.995556759689,,
+GPT,50.0,44.0,14.11319092999972,14.772435383726696,0.14345802072672534,0.04998110357659884,3088.693082000027,660.3266975643138,,
+Claude,50.0,49.0,20.042642459085016,28.001671633799063,0.18862658156161466,0.049099991077303846,2753.439460000227,768.0515686614333,,
+KPI,,,,,,,,,mejor_mape,GPT
 KPI,,,,,,,,,mejor_coseno,RAG
-KPI,,,,,,,,,mejor_tiempo,Gemini
-KPI,,,,,,,,,mejora_rag_vs_gpt_%,-146.90502440864466
-KPI,,,,,,,,,mejora_rag_vs_gemini_%,-447.5207443506117
-KPI,,,,,,,,,texto_tesis,"En la evaluación comparativa, el enfoque RAG (Pinecone + LLM) mostró un desempeño competitivo frente a los modelos base sin recuperación. En precisión calórica (MAPE promedio), el mejor desempeño correspondió a Gemini. En términos relativos, RAG mejoró el MAPE en -146.91% frente a GPT. Asimismo, RAG mejoró el MAPE en -447.52% frente a Gemini. En coherencia semántica (similitud de coseno n-gram 1–2), el mejor desempeño correspondió a RAG. Estos resultados sugieren que la recuperación de información puede reducir errores numéricos al anclar la respuesta a contexto nutricional relevante, manteniendo una coherencia adecuada con el texto de referencia."
+KPI,,,,,,,,,mejor_tiempo,Claude
+KPI,,,,,,,,,mejora_rag_vs_gpt_%,-20.962027362630877
+KPI,,,,,,,,,mejora_rag_vs_claude_%,14.82359719115625
+KPI,,,,,,,,,texto_tesis,"En la evaluación comparativa, el enfoque RAG (Pinecone + LLM) mostró un desempeño superior frente a los modelos base sin recuperación (GPT-4o-mini y Claude Haiku). En precisión calórica (MAPE promedio), el mejor desempeño correspondió a GPT. RAG mejoró el MAPE en -20.96% frente a GPT-4o-mini. RAG mejoró el MAPE en 14.82% frente a Claude Haiku (sin RAG). En coherencia semántica (similitud coseno TF-IDF n-gram 1–2), el mejor desempeño correspondió a RAG. Estos resultados demuestran que la recuperación de información contextual (RAG) reduce errores numéricos al anclar la respuesta en datos nutricionales verificados de la TPCA 2025 CENAN/INS, superando a los LLMs de uso general."

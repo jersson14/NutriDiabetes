@@ -41,10 +41,10 @@ function SourcesPanel({ fuentes }) {
             <div key={i} className="px-3 py-2.5">
               <div className="flex items-start justify-between gap-2 flex-wrap">
                 <p className="font-semibold text-gray-800 leading-tight">
-                  {f.titulo} ({f.anio})
+                  {f.titulo} {f.anio ? `(${f.anio})` : ''}
                 </p>
                 <span className="shrink-0 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-medium">
-                  p. {f.pagina ?? '?'} · sim. {(f.score * 100).toFixed(0)}%
+                  {f.pagina != null ? `p. ${f.pagina} · ` : ''}{f.score < 1 ? `sim. ${(f.score * 100).toFixed(0)}%` : 'Fuente base'}
                 </span>
               </div>
               <p className="text-gray-500 mt-0.5">{f.institucion}</p>
@@ -187,13 +187,16 @@ export default function ChatPage() {
       if (index >= fullText.length) {
         setStreamingText('');
         setIsStreaming(false);
+        // Capturar fuentes ANTES de llamar setMessages para evitar que
+        // pendingFuentesRef.current sea null cuando React procese el update
+        const fuentesCapturadas = pendingFuentesRef.current || [];
+        pendingFuentesRef.current = null;
         setMessages(prev => [...prev, {
           id: 'resp-' + Date.now(),
           rol: 'ASSISTANT',
           contenido: fullText,
-          fuentes: pendingFuentesRef.current,
+          fuentes: fuentesCapturadas,
         }]);
-        pendingFuentesRef.current = null;
         clearInterval(interval);
       } else {
         setStreamingText(fullText.substring(0, index));
@@ -220,6 +223,7 @@ export default function ChatPage() {
       }
 
       setLoading(false);
+      console.log('[NutriBot] fuentes recibidas:', data.fuentes?.length, data.fuentes);
       simulateStreaming(data.mensaje.contenido, data.fuentes || []);
       loadConversaciones();
     } catch (err) {
@@ -252,8 +256,11 @@ export default function ChatPage() {
       .replace(/_(.*?)_/g, '<em style="color:#666">$1</em>')
       .replace(/^- (.*$)/gm, '<div style="padding-left:8px;margin:2px 0">• $1</div>')
       .replace(/^(\d+)\. (.*$)/gm, '<div style="padding-left:8px;margin:2px 0"><strong>$1.</strong> $2</div>')
-      .replace(/\n\n/g, '<div style="height:8px"></div>')
-      .replace(/\n/g, '<br/>');
+      .replace(/\n\n/g, '<br/>')
+      .replace(/\n/g, '<br/>')
+      .replace(/<br\/>(<div style="padding-left)/g, '$1')
+      .replace(/<\/div><br\/>/g, '</div>')
+      .replace(/<\/div>(<div style="padding-left)/g, '</div>$1');
   };
 
   const formatDate = (dateStr) => {

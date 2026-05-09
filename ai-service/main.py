@@ -9,10 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 import time
 
-load_dotenv()
+# Cargar siempre el .env del directorio ai-service/, sin importar desde dónde se ejecute uvicorn
+_ENV_PATH = Path(__file__).parent / ".env"
+load_dotenv(_ENV_PATH)
 
 from app.rag_service import RAGService
 from app.embeddings_service import EmbeddingsService

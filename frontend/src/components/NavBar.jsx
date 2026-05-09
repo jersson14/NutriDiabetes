@@ -1,11 +1,12 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { Home, UtensilsCrossed, Droplet, MessageCircle, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Home, UtensilsCrossed, Droplet, MessageCircle, User, Shield } from 'lucide-react';
 
-const navItems = [
+const BASE_NAV = [
   { href: '/dashboard', icon: Home,            label: 'Inicio'  },
-  { href: '/alimentos', icon: UtensilsCrossed,  label: 'Comidas' },
+  { href: '/comidas',   icon: UtensilsCrossed,  label: 'Comidas' },
   { href: '/glucosa',   icon: Droplet,          label: 'Glucosa' },
   { href: '/chat',      icon: MessageCircle,    label: 'Chat IA' },
   { href: '/perfil',    icon: User,             label: 'Perfil'  },
@@ -14,6 +15,18 @@ const navItems = [
 export default function NavBar() {
   const router   = useRouter();
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    try {
+      const u = localStorage.getItem('user');
+      if (u) setIsAdmin(JSON.parse(u).rol === 'ADMINISTRADOR');
+    } catch {}
+  }, []);
+
+  const navItems = isAdmin
+    ? [...BASE_NAV, { href: '/admin', icon: Shield, label: 'Admin' }]
+    : BASE_NAV;
 
   return (
     <>
@@ -40,7 +53,7 @@ export default function NavBar() {
         {/* Nav items */}
         <nav className="flex-1 px-2 xl:px-3 py-4 space-y-1 overflow-y-auto">
           {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname?.startsWith(href);
+            const isActive = pathname?.startsWith(href) || (href === '/comidas' && pathname?.startsWith('/alimentos'));
             return (
               <button
                 key={href}
@@ -86,7 +99,7 @@ export default function NavBar() {
             </svg>
           </div>
           {navItems.map(({ href, icon: Icon, label }) => {
-            const isActive = pathname?.startsWith(href);
+            const isActive = pathname?.startsWith(href) || (href === '/comidas' && pathname?.startsWith('/alimentos'));
             return (
               <button
                 key={href}
@@ -113,7 +126,7 @@ export default function NavBar() {
           <div className="safe-area-bottom">
             <div className="flex justify-around items-stretch px-1 py-1">
               {navItems.map(({ href, icon: Icon, label }) => {
-                const isActive = pathname?.startsWith(href);
+                const isActive = pathname?.startsWith(href) || (href === '/comidas' && pathname?.startsWith('/alimentos'));
                 return (
                   <button
                     key={href}

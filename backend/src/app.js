@@ -50,6 +50,8 @@ const chatRoutes = require('./routes/chat.routes');
 const glucosaRoutes = require('./routes/glucosa.routes');
 const perfilRoutes = require('./routes/perfil.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const adminRoutes  = require('./routes/admin.routes');
+const comidasRoutes = require('./routes/comidas.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/alimentos', alimentosRoutes);
@@ -57,6 +59,8 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/glucosa', glucosaRoutes);
 app.use('/api/perfil', perfilRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/comidas', comidasRoutes);
 
 // ── Health Check ──
 app.get('/api/health', (req, res) => {

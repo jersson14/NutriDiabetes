@@ -72,10 +72,14 @@ export default function GlucosaPage() {
   const [error, setError]     = useState('');
   const [historial, setHistorial] = useState([]);
   const [stats, setStats]     = useState(null);
-  const [tab, setTab]         = useState('registrar');
+  const [tab, setTab]           = useState('registrar');
+  const [userName, setUserName] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState('');
 
   useEffect(() => {
     if (!localStorage.getItem('accessToken')) { router.push('/login'); return; }
+    const u = localStorage.getItem('user');
+    if (u) setUserName(JSON.parse(u).nombre || JSON.parse(u).nombre_completo || '');
     loadHistorial();
   }, []);
 
@@ -187,7 +191,7 @@ export default function GlucosaPage() {
 
   return (
     <div className="page-with-nav min-h-screen bg-[#EEF2F7] pb-32">
-      <Header title="Control de Glucosa" subtitle="Registra, historial y tendencias" variant="blue" showChat={false} showLogout={true} />
+      <Header title="Control de Glucosa" subtitle="Registra, historial y tendencias" variant="blue" showChat={false} showLogout={true} userName={userName} />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 relative z-10">
         <Tabs
@@ -300,9 +304,57 @@ export default function GlucosaPage() {
               </div>
             )}
 
+            {/* Filtro por tipo de medición */}
+            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+              {[{ value: '', label: 'Todos' }, ...TIPOS_MEDICION].map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => setFiltroTipo(t.value)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                    filtroTipo === t.value
+                      ? 'bg-[#0057B8] text-white border-[#0057B8]'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Stats del tipo seleccionado */}
+            {filtroTipo && (() => {
+              const filtrados = historial.filter(r => r.tipo_medicion === filtroTipo);
+              if (!filtrados.length) return null;
+              const vals = filtrados.map(r => parseFloat(r.valor_mg_dl));
+              const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+              const enRango = filtrados.filter(r => getGlucoseStatus(r.valor_mg_dl, r.tipo_medicion).color === 'green').length;
+              return (
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: 'Promedio', value: avg,              unit: 'mg/dL',  color: 'text-blue-600',    bg: 'bg-blue-50'    },
+                    { label: 'En rango', value: enRango,          unit: 'medic.', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { label: 'Total',    value: filtrados.length, unit: 'medic.', color: 'text-slate-600',   bg: 'bg-slate-50'   },
+                  ].map((s, i) => (
+                    <div key={i} className={`${s.bg} rounded-xl p-3 text-center border border-white`}>
+                      <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                      <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide mt-0.5">{s.label}</p>
+                      <p className="text-[10px] text-slate-400">{s.unit}</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
             <div className="bg-white rounded-2xl shadow-soft border border-slate-200/60 overflow-hidden">
               <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                <p className="font-bold text-slate-700 text-sm">Historial de mediciones</p>
+                <div>
+                  <p className="font-bold text-slate-700 text-sm">Historial de mediciones</p>
+                  {filtroTipo && (
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {TIPOS_MEDICION.find(t => t.value === filtroTipo)?.label} · {historial.filter(r => r.tipo_medicion === filtroTipo).length} registros
+                    </p>
+                  )}
+                </div>
                 {historial.length > 0 && (
                   <button onClick={exportCSV}
                     className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-200/80 transition-all active:scale-95">
@@ -319,34 +371,39 @@ export default function GlucosaPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {historial.map(reg => {
-                    const st   = getGlucoseStatus(reg.valor_mg_dl, reg.tipo_medicion);
-                    const date = new Date(reg.fecha_medicion);
-                    return (
-                      <div key={reg.id} className="px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <div className={`w-1.5 h-10 rounded-full flex-shrink-0 ${st.color === 'green' ? 'bg-emerald-400' : st.color === 'orange' ? 'bg-amber-400' : 'bg-red-400'}`} />
-                            <div className="min-w-0">
-                              <div className="flex items-baseline gap-2 flex-wrap">
-                                <span className="text-2xl font-bold text-slate-900 tabular-nums leading-none">{reg.valor_mg_dl}</span>
-                                <span className="text-xs text-slate-400 font-medium">mg/dL</span>
-                                <StatusBadge color={st.color} label={st.label} />
+                  {historial
+                    .filter(reg => !filtroTipo || reg.tipo_medicion === filtroTipo)
+                    .map(reg => {
+                      const st   = getGlucoseStatus(reg.valor_mg_dl, reg.tipo_medicion);
+                      const date = new Date(reg.fecha_medicion);
+                      return (
+                        <div key={reg.id} className="px-5 py-3.5 hover:bg-slate-50/60 transition-colors">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className={`w-1.5 h-10 rounded-full flex-shrink-0 ${st.color === 'green' ? 'bg-emerald-400' : st.color === 'orange' ? 'bg-amber-400' : 'bg-red-400'}`} />
+                              <div className="min-w-0">
+                                <div className="flex items-baseline gap-2 flex-wrap">
+                                  <span className="text-2xl font-bold text-slate-900 tabular-nums leading-none">{reg.valor_mg_dl}</span>
+                                  <span className="text-xs text-slate-400 font-medium">mg/dL</span>
+                                  <StatusBadge color={st.color} label={st.label} />
+                                </div>
+                                <p className="text-xs text-slate-500 mt-1 truncate">
+                                  {TIPOS_MEDICION.find(t => t.value === reg.tipo_medicion)?.label || reg.tipo_medicion}
+                                  {reg.notas && <span className="ml-2 italic opacity-70">· {reg.notas}</span>}
+                                </p>
                               </div>
-                              <p className="text-xs text-slate-500 mt-1 truncate">
-                                {TIPOS_MEDICION.find(t => t.value === reg.tipo_medicion)?.label || reg.tipo_medicion}
-                                {reg.notas && <span className="ml-2 italic opacity-70">· {reg.notas}</span>}
-                              </p>
+                            </div>
+                            <div className="text-right text-xs text-slate-400 flex-shrink-0">
+                              <p className="font-semibold text-slate-600">{date.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</p>
+                              <p>{date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
                           </div>
-                          <div className="text-right text-xs text-slate-400 flex-shrink-0">
-                            <p className="font-semibold text-slate-600">{date.toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}</p>
-                            <p>{date.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</p>
-                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  {filtroTipo && historial.filter(r => r.tipo_medicion === filtroTipo).length === 0 && (
+                    <div className="text-center py-10"><p className="text-slate-400 text-sm">Sin registros de este tipo</p></div>
+                  )}
                 </div>
               )}
             </div>

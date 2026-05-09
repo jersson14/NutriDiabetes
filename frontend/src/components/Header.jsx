@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { LogOut, MessageCircle, X, Menu, ChevronRight, Stethoscope } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function Header({ title, subtitle, variant = 'blue', showChat = true, showLogout = true }) {
+export default function Header({ title, subtitle, variant = 'blue', showChat = true, showLogout = true, userName }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
 
@@ -47,6 +47,11 @@ export default function Header({ title, subtitle, variant = 'blue', showChat = t
               <Stethoscope size={18} className="text-white" />
             </div>
             <div className="min-w-0">
+              {userName && (
+                <p className="text-white/55 text-[11px] font-medium tracking-wide mb-0.5 truncate">
+                  Hola, {userName.split(' ')[0]}
+                </p>
+              )}
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-tight drop-shadow-sm truncate">
                 {title}
               </h1>
