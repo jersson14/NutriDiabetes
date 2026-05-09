@@ -1,5 +1,6 @@
 import './globals.css'
 import Providers from './providers'
+import InstallPrompt from '@/components/InstallPrompt'
 
 export const metadata = {
   title: 'NutriDiabetes Perú | Recomendaciones Nutricionales DM2',
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen bg-background">
         <Providers>
           {children}
+          <InstallPrompt />
         </Providers>
       </body>
     </html>

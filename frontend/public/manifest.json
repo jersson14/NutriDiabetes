@@ -1,12 +1,15 @@
 {
   "name": "NutriDiabetes Perú",
   "short_name": "NutriDM2",
-  "description": "Sistema de recomendaciones nutricionales para pacientes con Diabetes Mellitus Tipo 2",
-  "start_url": "/",
+  "description": "Asistente nutricional con IA para Diabetes Mellitus Tipo 2 — TPCA 2025 CENAN/INS",
+  "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#F5F7FA",
-  "theme_color": "#005BAC",
+  "background_color": "#EEF2F7",
+  "theme_color": "#0057B8",
   "orientation": "portrait-primary",
+  "lang": "es-PE",
+  "categories": ["health", "medical", "food"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -33,6 +36,16 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["health", "medical", "food"],
-  "lang": "es-PE"
+  "shortcuts": [
+    {
+      "name": "Chat NutriBot",
+      "url": "/chat",
+      "description": "Consultar al asistente nutricional"
+    },
+    {
+      "name": "Registrar Glucosa",
+      "url": "/glucosa",
+      "description": "Registrar medición de glucosa"
+    }
+  ]
 }

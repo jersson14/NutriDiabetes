@@ -33,8 +33,10 @@ const loginWithGoogle = async (req, res) => {
     );
 
     let user;
+    let esNuevo = false;
 
     if (result.rows.length === 0) {
+      esNuevo = true;
       // Crear nuevo usuario
       const insertResult = await transaction(async (client) => {
         const userResult = await client.query(
@@ -78,10 +80,12 @@ const loginWithGoogle = async (req, res) => {
 
     res.json({
       message: 'Login exitoso',
+      es_nuevo: esNuevo,
       user: {
         id: user.id,
         email: user.email,
         nombre: user.nombre_completo,
+        nombre_completo: user.nombre_completo,
         avatar: user.avatar_url,
         rol: user.rol
       },

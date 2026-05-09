@@ -113,6 +113,7 @@ export const adminAPI = {
   getConsultas:        (limit, page) => api.get('/admin/consultas', { params: { limit, page } }),
   getLogs:             (limit)      => api.get('/admin/logs', { params: { limit } }),
   toggleUsuarioActivo: (id, activo) => api.put(`/admin/usuarios/${id}/activo`, { activo }),
+  cambiarRol:          (id, rol)    => api.put(`/admin/usuarios/${id}/rol`,    { rol }),
   // Gestión de alimentos
   getAlimentos:   (params) => api.get('/admin/alimentos', { params }),
   crearAlimento:  (data)   => api.post('/admin/alimentos', data),

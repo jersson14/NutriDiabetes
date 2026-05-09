@@ -93,10 +93,14 @@ export default function LoginPage() {
       setError("");
       try {
         const response = await authAPI.loginGoogle(tokenResponse.access_token);
-        const { accessToken, user } = response.data;
+        const { accessToken, user, es_nuevo } = response.data;
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("user", JSON.stringify(user));
-        setSuccess("¡Bienvenido! Redirigiendo...");
+        if (es_nuevo) {
+          localStorage.removeItem("onboardingVisto");
+          localStorage.setItem("esNuevo", "1");
+        }
+        setSuccess(es_nuevo ? "¡Bienvenido a NutriDiabetes! Redirigiendo..." : "¡Bienvenido de vuelta! Redirigiendo...");
         setTimeout(() => router.push("/dashboard"), 800);
       } catch (err) {
         setError(err.response?.data?.error || "Error al conectar con Google");

@@ -58,16 +58,23 @@ const ACTIONS = [
 /* ── component ────────────────────────────────────── */
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser]           = useState(null);
-  const [dashboard, setDashboard] = useState(null);
-  const [loading, setLoading]     = useState(true);
+  const [user, setUser]               = useState(null);
+  const [dashboard, setDashboard]     = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (!userData) { router.push('/login'); return; }
     setUser(JSON.parse(userData));
     dashboardAPI.get()
-      .then(res => setDashboard(res.data))
+      .then(res => {
+        setDashboard(res.data);
+        // Mostrar onboarding si no tiene glucosa registrada ni perfil completo
+        const esNuevo = localStorage.getItem('esNuevo') === '1';
+        const yaVio   = localStorage.getItem('onboardingVisto') === '1';
+        if (esNuevo && !yaVio) setShowOnboarding(true);
+      })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, []);
@@ -120,6 +127,66 @@ export default function DashboardPage() {
 
   return (
     <div className="page-with-nav min-h-screen bg-[#EEF2F7] pb-24 overflow-x-hidden">
+
+      {/* ── Modal de bienvenida (primer acceso) ── */}
+      {showOnboarding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-5">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in">
+            {/* Header */}
+            <div className="bg-gradient-to-br from-[#0057B8] to-[#7C3AED] px-6 pt-8 pb-6 text-center">
+              <p className="text-4xl mb-2">👋</p>
+              <h2 className="text-white text-xl font-bold">¡Bienvenido a NutriDiabetes!</h2>
+              <p className="text-white/70 text-sm mt-1">
+                Hola, <span className="font-semibold">{user?.nombre_completo?.split(' ')[0]}</span>
+              </p>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-5 space-y-3">
+              <p className="text-slate-600 text-sm text-center leading-relaxed">
+                Para que NutriBot te dé recomendaciones personalizadas, completa estos 2 pasos primero:
+              </p>
+
+              {/* Paso 1 */}
+              <button
+                onClick={() => { localStorage.setItem('onboardingVisto','1'); localStorage.removeItem('esNuevo'); setShowOnboarding(false); router.push('/glucosa'); }}
+                className="w-full flex items-center gap-4 p-4 bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-2xl transition-all active:scale-[0.98] text-left"
+              >
+                <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
+                  💉
+                </div>
+                <div>
+                  <p className="font-bold text-emerald-800 text-sm">Paso 1 — Registrar glucosa</p>
+                  <p className="text-emerald-600 text-xs mt-0.5">Registra tu primera medición de glucosa en sangre</p>
+                </div>
+                <span className="ml-auto text-emerald-500 text-lg">→</span>
+              </button>
+
+              {/* Paso 2 */}
+              <button
+                onClick={() => { localStorage.setItem('onboardingVisto','1'); localStorage.removeItem('esNuevo'); setShowOnboarding(false); router.push('/perfil'); }}
+                className="w-full flex items-center gap-4 p-4 bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-2xl transition-all active:scale-[0.98] text-left"
+              >
+                <div className="w-12 h-12 bg-[#0057B8] rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
+                  🩺
+                </div>
+                <div>
+                  <p className="font-bold text-blue-800 text-sm">Paso 2 — Completar perfil clínico</p>
+                  <p className="text-blue-600 text-xs mt-0.5">Diagnóstico DM2, medicamentos, HbA1c y restricciones</p>
+                </div>
+                <span className="ml-auto text-blue-400 text-lg">→</span>
+              </button>
+
+              <button
+                onClick={() => { localStorage.setItem('onboardingVisto','1'); localStorage.removeItem('esNuevo'); setShowOnboarding(false); }}
+                className="w-full text-center text-xs text-slate-400 hover:text-slate-600 py-2 transition-colors"
+              >
+                Ahora no, continuar al dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════
           HEADER — app-style gradient hero

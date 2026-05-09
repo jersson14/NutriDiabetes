@@ -307,6 +307,35 @@ const toggleUsuarioActivo = async (req, res) => {
   }
 };
 
+/**
+ * PUT /api/admin/usuarios/:id/rol
+ */
+const cambiarRolUsuario = async (req, res) => {
+  try {
+    const { rol } = req.body;
+    const { id } = req.params;
+    const ROLES = ['PACIENTE', 'NUTRICIONISTA', 'ADMINISTRADOR'];
+    if (!ROLES.includes(rol)) {
+      return res.status(400).json({ error: `rol debe ser: ${ROLES.join(', ')}` });
+    }
+    if (id === req.user.id) {
+      return res.status(400).json({ error: 'No puedes cambiar tu propio rol' });
+    }
+    const result = await query(
+      `UPDATE usuarios SET rol = $1, fecha_actualizacion = NOW()
+       WHERE id = $2 RETURNING id, email, nombre_completo, rol`,
+      [rol, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    res.json({ usuario: result.rows[0] });
+  } catch (error) {
+    console.error('Error al cambiar rol:', error.message);
+    res.status(500).json({ error: 'Error al cambiar rol' });
+  }
+};
+
 // ──────────────────────────────────────────────────────────────────────────────
 // GESTIÓN DE ALIMENTOS (PostgreSQL + Pinecone)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -455,6 +484,7 @@ const eliminarAlimento = async (req, res) => {
 };
 
 module.exports = {
-  getStats, getUsuarios, getMetricasRAG, getConsultas, getLogs, toggleUsuarioActivo,
+  getStats, getUsuarios, getMetricasRAG, getConsultas, getLogs,
+  toggleUsuarioActivo, cambiarRolUsuario,
   getAlimentosAdmin, crearAlimento, eliminarAlimento,
 };

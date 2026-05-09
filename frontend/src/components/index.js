@@ -9,3 +9,4 @@ export { default as InfoCard } from './InfoCard';
 export { default as Tabs } from './Tabs';
 export { default as Button } from './Button';
 export { default as Badge } from './Badge';
+export { default as InstallPrompt } from './InstallPrompt';

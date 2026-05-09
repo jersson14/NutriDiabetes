@@ -283,6 +283,15 @@ export default function AdminPage() {
     } catch {}
   };
 
+  const handleCambiarRol = async (id, nuevoRol) => {
+    try {
+      await adminAPI.cambiarRol(id, nuevoRol);
+      loadUsuarios();
+    } catch (e) {
+      alert(e.response?.data?.error || 'Error al cambiar rol');
+    }
+  };
+
   /* ── loading ── */
   if (loading) {
     return (
@@ -507,32 +516,48 @@ export default function AdminPage() {
                             : <span className="text-white font-bold text-sm">{(u.nombre_completo || u.email || '?')[0].toUpperCase()}</span>
                           }
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-slate-800 truncate">{u.nombre_completo || '(sin nombre)'}</p>
                           <p className="text-xs text-slate-400 truncate">{u.email}</p>
-                          <div className="flex flex-wrap gap-1.5 mt-1.5">
-                            <Badge label={u.rol} colorClass={ROL_COLORS[u.rol] || 'bg-slate-100 text-slate-700 border-slate-200'} />
-                            {u.clasificacion_dm2 && (
+
+                          {/* Botones de rol — junto al nombre */}
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Rol:</span>
+                            {['PACIENTE','NUTRICIONISTA','ADMINISTRADOR'].map(rol => (
+                              <button
+                                key={rol}
+                                onClick={() => u.rol !== rol && handleCambiarRol(u.id, rol)}
+                                className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border transition-all active:scale-95 ${
+                                  u.rol === rol
+                                    ? 'bg-[#0057B8] text-white border-[#0057B8]'
+                                    : 'bg-white text-slate-400 border-slate-200 hover:border-blue-300 hover:text-[#0057B8] cursor-pointer'
+                                }`}
+                              >
+                                {rol === 'PACIENTE' ? 'Paciente' : rol === 'NUTRICIONISTA' ? 'Nutricionista' : 'Admin'}
+                              </button>
+                            ))}
+                          </div>
+
+                          {u.clasificacion_dm2 && (
+                            <div className="mt-1.5">
                               <Badge
                                 label={DM2_LABELS[u.clasificacion_dm2] || u.clasificacion_dm2}
                                 colorClass={DM2_COLORS[u.clasificacion_dm2] || 'bg-slate-100 text-slate-700 border-slate-200'}
                               />
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
+                        {/* Toggle activo */}
+                        <button
+                          onClick={() => handleToggleActivo(u.id, u.activo)}
+                          title={u.activo ? 'Desactivar' : 'Activar'}
+                          className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
+                            u.activo ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+                          }`}
+                        >
+                          {u.activo ? <CheckCircle2 size={17} /> : <XCircle size={17} />}
+                        </button>
                       </div>
-                      {/* Toggle activo */}
-                      <button
-                        onClick={() => handleToggleActivo(u.id, u.activo)}
-                        title={u.activo ? 'Desactivar' : 'Activar'}
-                        className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95 ${
-                          u.activo
-                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                            : 'bg-red-50 text-red-500 hover:bg-red-100'
-                        }`}
-                      >
-                        {u.activo ? <CheckCircle2 size={17} /> : <XCircle size={17} />}
-                      </button>
                     </div>
 
                     {/* Métricas del usuario */}
