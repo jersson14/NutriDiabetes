@@ -2,7 +2,8 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Home, UtensilsCrossed, Droplet, MessageCircle, User, Shield } from 'lucide-react';
+import { Home, UtensilsCrossed, Droplet, MessageCircle, User, Shield, Download } from 'lucide-react';
+import { useInstall } from '@/lib/installContext';
 
 const BASE_NAV = [
   { href: '/dashboard', icon: Home,            label: 'Inicio'  },
@@ -16,6 +17,7 @@ export default function NavBar() {
   const router   = useRouter();
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
+  const { canInstall, isInstalled, triggerInstall } = useInstall() || {};
 
   useEffect(() => {
     try {
@@ -23,6 +25,8 @@ export default function NavBar() {
       if (u) setIsAdmin(JSON.parse(u).rol === 'ADMINISTRADOR');
     } catch {}
   }, []);
+
+  const showInstallBtn = canInstall && !isInstalled;
 
   const navItems = isAdmin
     ? [...BASE_NAV, { href: '/admin', icon: Shield, label: 'Admin' }]
@@ -78,8 +82,24 @@ export default function NavBar() {
         </nav>
 
         {/* Footer */}
-        <div className="hidden xl:block px-5 py-4 border-t border-slate-100">
-          <p className="text-[10px] text-slate-400 leading-snug">
+        <div className="px-3 xl:px-5 py-4 border-t border-slate-100 space-y-3">
+          {/* Botón instalar app */}
+          {showInstallBtn && (
+            <button
+              onClick={triggerInstall}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl
+                bg-gradient-to-r from-[#0057B8] to-[#003D82] text-white
+                hover:from-[#004FA3] hover:to-[#003070]
+                transition-all active:scale-95 shadow-sm group"
+              title="Instalar app"
+            >
+              <Download size={16} className="flex-shrink-0" />
+              <span className="hidden xl:block text-xs font-semibold leading-none">
+                Instalar app
+              </span>
+            </button>
+          )}
+          <p className="hidden xl:block text-[10px] text-slate-400 leading-snug">
             Respaldado por<br />
             <span className="font-semibold text-slate-500">TPCA 2025 · CENAN/INS</span>
           </p>
@@ -117,6 +137,18 @@ export default function NavBar() {
               </button>
             );
           })}
+          {/* Botón instalar app (tablet) */}
+          {showInstallBtn && (
+            <button
+              onClick={triggerInstall}
+              className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold
+                text-white bg-[#0057B8] hover:bg-[#004FA3] transition-all active:scale-95"
+              title="Instalar app"
+            >
+              <Download size={14} />
+              Instalar
+            </button>
+          )}
         </div>
       </nav>
 
@@ -138,7 +170,6 @@ export default function NavBar() {
                       ${isActive ? 'text-[#0057B8]' : 'text-slate-400 hover:text-slate-600'}
                     `}
                   >
-                    {/* Active indicator bar */}
                     {isActive && (
                       <span className="absolute top-1 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-[#0057B8]" />
                     )}
@@ -151,6 +182,19 @@ export default function NavBar() {
                   </button>
                 );
               })}
+
+              {/* Botón instalar app (mobile) — solo cuando disponible */}
+              {showInstallBtn && (
+                <button
+                  onClick={triggerInstall}
+                  className="relative flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl transition-all duration-200 flex-1 text-[#0057B8]"
+                >
+                  <div className="p-1.5 rounded-xl bg-blue-50">
+                    <Download size={19} strokeWidth={2} />
+                  </div>
+                  <span className="text-[9px] leading-none font-bold">Instalar</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

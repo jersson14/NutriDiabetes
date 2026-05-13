@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useGoogleLogin } from "@react-oauth/google";
 import { authAPI } from "@/lib/api";
+import { useInstall } from "@/lib/installContext";
 
 const LogoNutriDiabetes = () => (
   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -80,7 +81,9 @@ export default function LoginPage() {
   const [success, setSuccess]           = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", nombreCompleto: "" });
-  const [mounted, setMounted]           = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  const { isInstalled } = useInstall() || {};
 
   useEffect(() => {
     setMounted(true);
@@ -358,6 +361,16 @@ export default function LoginPage() {
             </svg>
             <span>Datos protegidos con encriptación SSL</span>
           </div>
+
+          {/* App instalada — badge confirmación */}
+          {isInstalled && (
+            <div className="mt-6 flex items-center justify-center gap-2 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 animate-fade-in">
+              <svg className="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-xs font-semibold text-emerald-700">App instalada en este dispositivo</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

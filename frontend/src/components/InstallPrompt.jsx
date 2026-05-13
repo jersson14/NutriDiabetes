@@ -1,154 +1,120 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Download, X, Smartphone } from 'lucide-react';
+import { useState } from 'react';
+import { useInstall } from '@/lib/installContext';
+
+const LogoNutri = () => (
+  <svg viewBox="0 0 100 100" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="mg1" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#00C96D" /><stop offset="100%" stopColor="#008647" />
+      </linearGradient>
+      <linearGradient id="mg2" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#3387D6" /><stop offset="100%" stopColor="#005BAC" />
+      </linearGradient>
+    </defs>
+    <path d="M50 88 C15 88, 10 45, 25 25 C35 10, 45 18, 50 28 C55 18, 65 10, 75 25 C90 45, 85 88, 50 88 Z" fill="url(#mg1)" />
+    <path d="M48 26 C43 5, 68 0, 70 20 C70 20, 55 25, 48 26 Z" fill="url(#mg2)" />
+    <path d="M22 55 L38 55 L45 38 L55 72 L62 55 L78 55" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 
 export default function InstallPrompt() {
-  const [prompt, setPrompt]       = useState(null);
-  const [visible, setVisible]     = useState(false);
-  const [installed, setInstalled] = useState(false);
-  const [isIOS, setIsIOS]         = useState(false);
-  const [showIOS, setShowIOS]     = useState(false);
+  const { isInstalled, isIOS, hasNativePrompt, showBanner, triggerInstall, dismissBanner } = useInstall();
+  const [installing, setInstalling] = useState(false);
+  const [showIOSSteps, setShowIOSSteps] = useState(false);
 
-  useEffect(() => {
-    // Registrar Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
-
-    // Detectar si ya está instalada
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setInstalled(true);
-      return;
-    }
-
-    // Detectar iOS (Safari no soporta beforeinstallprompt)
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    setIsIOS(ios);
-
-    // Mostrar banner iOS si no se descartó
-    if (ios && !localStorage.getItem('pwaIosDismissed')) {
-      setTimeout(() => setShowIOS(true), 3000);
-      return;
-    }
-
-    // Capturar evento de instalación (Chrome/Android)
-    const handler = (e) => {
-      e.preventDefault();
-      setPrompt(e);
-      if (!localStorage.getItem('pwaDismissed')) {
-        setTimeout(() => setVisible(true), 2000);
-      }
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  if (isInstalled || !showBanner) return null;
 
   const handleInstall = async () => {
-    if (!prompt) return;
-    prompt.prompt();
-    const { outcome } = await prompt.userChoice;
-    if (outcome === 'accepted') setInstalled(true);
-    setVisible(false);
-    setPrompt(null);
+    if (hasNativePrompt) {
+      setInstalling(true);
+      await triggerInstall();
+      setInstalling(false);
+    } else if (isIOS) {
+      setShowIOSSteps(v => !v);
+    }
   };
-
-  const handleDismiss = () => {
-    setVisible(false);
-    localStorage.setItem('pwaDismissed', '1');
-  };
-
-  const handleDismissIOS = () => {
-    setShowIOS(false);
-    localStorage.setItem('pwaIosDismissed', '1');
-  };
-
-  if (installed) return null;
-
-  // Banner iOS
-  if (isIOS && showIOS) {
-    return (
-      <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 z-50 animate-slide-up">
-        <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 p-4 max-w-sm mx-auto">
-          <div className="flex items-start gap-3">
-            <div className="w-11 h-11 bg-gradient-to-br from-[#0057B8] to-[#00965A] rounded-xl flex items-center justify-center flex-shrink-0 text-xl">
-              🍎
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-slate-800 text-sm">Instala NutriDiabetes</p>
-              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                Toca <span className="font-semibold">⎙ Compartir</span> y luego{' '}
-                <span className="font-semibold">"Agregar a inicio"</span> para instalar.
-              </p>
-            </div>
-            <button onClick={handleDismissIOS} className="p-1 text-slate-300 hover:text-slate-500 flex-shrink-0">
-              <X size={16} />
-            </button>
-          </div>
-          {/* Flecha apuntando hacia abajo (toolbar de Safari) */}
-          <div className="flex justify-center mt-3">
-            <div className="flex items-center gap-1.5 text-xs text-blue-600 font-semibold bg-blue-50 px-3 py-1.5 rounded-full">
-              <Smartphone size={13} />
-              Disponible para instalar en tu iPhone
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Banner Chrome/Android
-  if (!visible || !prompt) return null;
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 left-4 right-4 z-50 animate-slide-up">
-      <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 overflow-hidden max-w-sm mx-auto">
-        {/* Header azul */}
-        <div className="bg-gradient-to-r from-[#0057B8] to-[#7C3AED] px-4 py-3 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-            🍎
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-white text-sm">NutriDiabetes Perú</p>
-            <p className="text-white/60 text-[11px]">Instala la app en tu dispositivo</p>
-          </div>
-          <button onClick={handleDismiss} className="p-1 text-white/50 hover:text-white flex-shrink-0">
-            <X size={16} />
-          </button>
-        </div>
+    <div
+      className="fixed bottom-4 left-4 right-4 z-[100] max-w-sm mx-auto"
+      style={{ animation: 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both' }}
+    >
+      <div className="bg-[#1a1f3a] rounded-2xl shadow-2xl overflow-hidden border border-white/10">
 
-        {/* Body */}
-        <div className="px-4 py-3">
-          <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            Accede más rápido, sin abrir el navegador. Funciona incluso con conexión limitada.
-          </p>
-          <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-            {[
-              { icon: '⚡', label: 'Más rápida' },
-              { icon: '📴', label: 'Sin internet' },
-              { icon: '🔔', label: 'Notificaciones' },
-            ].map(f => (
-              <div key={f.label} className="bg-slate-50 rounded-xl py-2 px-1">
-                <p className="text-base">{f.icon}</p>
-                <p className="text-[10px] text-slate-500 font-medium mt-0.5">{f.label}</p>
-              </div>
-            ))}
+        {/* Card principal */}
+        <div className="flex items-center gap-3 px-4 py-4">
+          {/* Icono app */}
+          <div className="w-14 h-14 bg-gradient-to-br from-[#0057B8] to-[#006E41] rounded-2xl p-2.5 flex-shrink-0 shadow-lg">
+            <LogoNutri />
           </div>
-          <div className="flex gap-2">
+
+          {/* Texto */}
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold text-sm leading-tight">Instalar NutriDiabetes</p>
+            <p className="text-white/60 text-xs mt-0.5 leading-tight">Accede rápido desde tu pantalla de inicio</p>
+          </div>
+
+          {/* Botones */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={handleDismiss}
-              className="flex-1 py-2.5 text-xs font-semibold text-slate-500 border border-slate-200 rounded-xl hover:bg-slate-50 transition-all"
+              onClick={dismissBanner}
+              className="text-white/50 hover:text-white/80 text-xs font-medium px-2 py-1 transition-colors"
             >
-              Ahora no
+              No, gracias
             </button>
             <button
               onClick={handleInstall}
-              className="flex-1 py-2.5 text-xs font-bold text-white bg-[#0057B8] hover:bg-[#004FA3] rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-95"
+              disabled={installing}
+              className="bg-[#0057B8] hover:bg-[#004FA3] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-70 shadow-lg"
             >
-              <Download size={14} />
-              Instalar app
+              {installing ? (
+                <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              )}
+              {installing ? '...' : 'Instalar'}
             </button>
           </div>
         </div>
+
+        {/* Pasos iOS — expandibles */}
+        {isIOS && showIOSSteps && (
+          <div className="px-4 pb-4 space-y-2 border-t border-white/10 pt-3">
+            {[
+              { n: '1', text: 'Toca el ícono ⎙ Compartir en Safari' },
+              { n: '2', text: 'Toca "Agregar a pantalla de inicio"' },
+              { n: '3', text: 'Toca "Agregar" para confirmar' },
+            ].map(({ n, text }) => (
+              <div key={n} className="flex items-center gap-3 bg-white/8 rounded-xl px-3 py-2">
+                <div className="w-5 h-5 rounded-full bg-[#0057B8] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{n}</div>
+                <p className="text-xs text-white/75 font-medium">{text}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Pasos genéricos — cuando no hay prompt nativo ni iOS */}
+        {!hasNativePrompt && !isIOS && (
+          <div className="px-4 pb-4 space-y-2 border-t border-white/10 pt-3">
+            <p className="text-[11px] text-white/40 font-medium mb-2">Para instalar manualmente:</p>
+            {[
+              { n: '1', text: 'Abre el menú del navegador (⋮)' },
+              { n: '2', text: 'Selecciona "Instalar app" o "Agregar a inicio"' },
+              { n: '3', text: 'Confirma la instalación' },
+            ].map(({ n, text }) => (
+              <div key={n} className="flex items-center gap-3 bg-white/8 rounded-xl px-3 py-2">
+                <div className="w-5 h-5 rounded-full bg-[#0057B8] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{n}</div>
+                <p className="text-xs text-white/75 font-medium">{text}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

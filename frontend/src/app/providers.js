@@ -1,12 +1,15 @@
 'use client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { InstallProvider } from '@/lib/installContext';
 
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function Providers({ children }) {
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-      {children}
+      <InstallProvider>
+        {children}
+      </InstallProvider>
     </GoogleOAuthProvider>
   );
 }
