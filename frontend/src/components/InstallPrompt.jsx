@@ -19,102 +19,64 @@ const LogoNutri = () => (
 );
 
 export default function InstallPrompt() {
-  const { isInstalled, isIOS, hasNativePrompt, showBanner, triggerInstall, dismissBanner } = useInstall();
+  const { isInstalled, hasNativePrompt, showBanner, triggerInstall, dismissBanner } = useInstall();
   const [installing, setInstalling] = useState(false);
-  const [showIOSSteps, setShowIOSSteps] = useState(false);
 
   if (isInstalled || !showBanner) return null;
 
   const handleInstall = async () => {
-    if (hasNativePrompt) {
-      setInstalling(true);
-      await triggerInstall();
-      setInstalling(false);
-    } else if (isIOS) {
-      setShowIOSSteps(v => !v);
-    }
+    if (!hasNativePrompt) return;
+    setInstalling(true);
+    await triggerInstall();
+    setInstalling(false);
   };
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 z-[100] max-w-sm mx-auto"
+      className="fixed bottom-4 left-3 right-3 z-[100] max-w-sm mx-auto"
       style={{ animation: 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both' }}
     >
-      <div className="bg-[#1a1f3a] rounded-2xl shadow-2xl overflow-hidden border border-white/10">
+      <div className="bg-[#1a1f3a] rounded-2xl shadow-2xl border border-white/10 flex items-center gap-3 px-4 py-3.5">
 
-        {/* Card principal */}
-        <div className="flex items-center gap-3 px-4 py-4">
-          {/* Icono app */}
-          <div className="w-14 h-14 bg-gradient-to-br from-[#0057B8] to-[#006E41] rounded-2xl p-2.5 flex-shrink-0 shadow-lg">
-            <LogoNutri />
-          </div>
-
-          {/* Texto */}
-          <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm leading-tight">Instalar NutriDiabetes</p>
-            <p className="text-white/60 text-xs mt-0.5 leading-tight">Accede rápido desde tu pantalla de inicio</p>
-          </div>
-
-          {/* Botones */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={dismissBanner}
-              className="text-white/50 hover:text-white/80 text-xs font-medium px-2 py-1 transition-colors"
-            >
-              No, gracias
-            </button>
-            <button
-              onClick={handleInstall}
-              disabled={installing}
-              className="bg-[#0057B8] hover:bg-[#004FA3] text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-70 shadow-lg"
-            >
-              {installing ? (
-                <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-              ) : (
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-              )}
-              {installing ? '...' : 'Instalar'}
-            </button>
-          </div>
+        {/* Icono app */}
+        <div className="w-14 h-14 bg-gradient-to-br from-[#0057B8] to-[#006E41] rounded-2xl p-2.5 flex-shrink-0 shadow-lg">
+          <LogoNutri />
         </div>
 
-        {/* Pasos iOS — expandibles */}
-        {isIOS && showIOSSteps && (
-          <div className="px-4 pb-4 space-y-2 border-t border-white/10 pt-3">
-            {[
-              { n: '1', text: 'Toca el ícono ⎙ Compartir en Safari' },
-              { n: '2', text: 'Toca "Agregar a pantalla de inicio"' },
-              { n: '3', text: 'Toca "Agregar" para confirmar' },
-            ].map(({ n, text }) => (
-              <div key={n} className="flex items-center gap-3 bg-white/8 rounded-xl px-3 py-2">
-                <div className="w-5 h-5 rounded-full bg-[#0057B8] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{n}</div>
-                <p className="text-xs text-white/75 font-medium">{text}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Texto */}
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-bold text-sm leading-tight">Instalar NutriDiabetes</p>
+          <p className="text-white/55 text-xs mt-0.5 leading-tight">Accede rápido desde tu pantalla de inicio</p>
+        </div>
 
-        {/* Pasos genéricos — cuando no hay prompt nativo ni iOS */}
-        {!hasNativePrompt && !isIOS && (
-          <div className="px-4 pb-4 space-y-2 border-t border-white/10 pt-3">
-            <p className="text-[11px] text-white/40 font-medium mb-2">Para instalar manualmente:</p>
-            {[
-              { n: '1', text: 'Abre el menú del navegador (⋮)' },
-              { n: '2', text: 'Selecciona "Instalar app" o "Agregar a inicio"' },
-              { n: '3', text: 'Confirma la instalación' },
-            ].map(({ n, text }) => (
-              <div key={n} className="flex items-center gap-3 bg-white/8 rounded-xl px-3 py-2">
-                <div className="w-5 h-5 rounded-full bg-[#0057B8] text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">{n}</div>
-                <p className="text-xs text-white/75 font-medium">{text}</p>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Acciones */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={dismissBanner}
+            className="text-white/45 hover:text-white/70 text-xs font-medium transition-colors px-1"
+          >
+            No, gracias
+          </button>
+
+          <button
+            onClick={handleInstall}
+            disabled={installing || !hasNativePrompt}
+            title={!hasNativePrompt ? 'Chrome está preparando la instalación...' : 'Instalar app'}
+            className="bg-[#0057B8] hover:bg-[#004FA3] active:scale-95 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all disabled:opacity-50 shadow-lg shadow-blue-900/40 cursor-pointer disabled:cursor-wait"
+          >
+            {installing ? (
+              <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            )}
+            {installing ? '...' : 'Instalar'}
+          </button>
+        </div>
       </div>
     </div>
   );

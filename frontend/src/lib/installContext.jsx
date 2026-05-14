@@ -3,9 +3,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const InstallCtx = createContext(null);
 
-// Clave en sessionStorage — se resetea al cerrar el tab/navegador
-const DISMISSED_KEY = 'pwa_install_dismissed';
-
 export function InstallProvider({ children }) {
   const [deferredPrompt,  setDeferredPrompt]  = useState(null);
   const [isInstalled,     setIsInstalled]     = useState(false);
@@ -16,35 +13,43 @@ export function InstallProvider({ children }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Ya instalada como standalone — nunca mostrar
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    // Si ya está instalada (standalone) o el usuario ya la instaló antes
+    if (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      localStorage.getItem('pwa_installed') === '1'
+    ) {
       setIsInstalled(true);
       return;
     }
 
-    // Ya descartada en esta sesión — no molestar de nuevo
-    if (sessionStorage.getItem(DISMISSED_KEY)) return;
-
-    // Detectar iOS
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(ios);
 
-    // Mostrar banner tras 1.5s siempre
-    const timer = setTimeout(() => setShowBanner(true), 1500);
+    // Si el evento llegó antes de que React montara (capturado en layout.js)
+    if (window.__pwaPrompt) {
+      setDeferredPrompt(window.__pwaPrompt);
+      setHasNativePrompt(true);
+    }
 
-    // Chrome / Edge / Android — captura el prompt nativo
+    // Escuchar si llega después de montar
     const handler = (e) => {
       e.preventDefault();
+      window.__pwaPrompt = e;
       setDeferredPrompt(e);
       setHasNativePrompt(true);
     };
     window.addEventListener('beforeinstallprompt', handler);
 
     window.addEventListener('appinstalled', () => {
+      localStorage.setItem('pwa_installed', '1');
       setIsInstalled(true);
       setDeferredPrompt(null);
+      setHasNativePrompt(false);
       setShowBanner(false);
     });
+
+    // Mostrar banner siempre a los 1.5s — sin importar sessionStorage ni nada
+    const timer = setTimeout(() => setShowBanner(true), 1500);
 
     return () => {
       clearTimeout(timer);
@@ -53,29 +58,31 @@ export function InstallProvider({ children }) {
   }, []);
 
   const triggerInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setIsInstalled(true);
-    setDeferredPrompt(null);
-    setShowBanner(false);
+    if (!deferredPrompt) return false;
+    try {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        localStorage.setItem('pwa_installed', '1');
+        setIsInstalled(true);
+        setShowBanner(false);
+      }
+      setDeferredPrompt(null);
+      setHasNativePrompt(false);
+      window.__pwaPrompt = null;
+      return outcome === 'accepted';
+    } catch {
+      return false;
+    }
   };
 
-  // "No, gracias" — no volver a mostrar en esta sesión del navegador
-  const dismissBanner = () => {
-    sessionStorage.setItem(DISMISSED_KEY, '1');
-    setShowBanner(false);
-  };
+  // "No, gracias" solo oculta en esta sesión — no guarda nada en storage
+  const dismissBanner = () => setShowBanner(false);
 
   return (
     <InstallCtx.Provider value={{
-      isInstalled,
-      isIOS,
-      hasNativePrompt,
-      showBanner,
-      triggerInstall,
-      dismissBanner,
-      canInstall: true,
+      isInstalled, isIOS, hasNativePrompt, showBanner,
+      triggerInstall, dismissBanner, canInstall: true,
     }}>
       {children}
     </InstallCtx.Provider>

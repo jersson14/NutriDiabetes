@@ -5,6 +5,81 @@ import { perfilAPI } from '@/lib/api';
 import { Header, FormField, NavBar, Button, InfoCard } from '@/components';
 import { User, Heart, Pill, Check, AlertCircle } from 'lucide-react';
 
+const IMC_RANGOS = [
+  { min: 0,    max: 18.5, label: 'Bajo peso',   color: '#3B82F6', bg: '#EFF6FF', bar: '#BFDBFE', emoji: '⚠️' },
+  { min: 18.5, max: 25,   label: 'Normal',       color: '#16A34A', bg: '#F0FDF4', bar: '#BBF7D0', emoji: '✅' },
+  { min: 25,   max: 30,   label: 'Sobrepeso',    color: '#D97706', bg: '#FFFBEB', bar: '#FDE68A', emoji: '⚡' },
+  { min: 30,   max: 35,   label: 'Obesidad I',   color: '#EA580C', bg: '#FFF7ED', bar: '#FED7AA', emoji: '🔴' },
+  { min: 35,   max: 40,   label: 'Obesidad II',  color: '#DC2626', bg: '#FEF2F2', bar: '#FECACA', emoji: '🔴' },
+  { min: 40,   max: 999,  label: 'Obesidad III', color: '#7F1D1D', bg: '#FEF2F2', bar: '#FCA5A5', emoji: '🔴' },
+];
+
+function IMCCard({ imc }) {
+  const rango = IMC_RANGOS.find(r => imc >= r.min && imc < r.max) || IMC_RANGOS[IMC_RANGOS.length - 1];
+  // Posición del marcador en la barra (0–100%)
+  const pct = Math.min(Math.max(((imc - 10) / (45 - 10)) * 100, 0), 100);
+
+  return (
+    <div className="rounded-2xl border p-5 space-y-4" style={{ background: rango.bg, borderColor: rango.bar }}>
+      {/* Cabecera */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">IMC Calculado</p>
+          <div className="flex items-baseline gap-2 mt-0.5">
+            <span className="text-4xl font-extrabold" style={{ color: rango.color }}>{imc.toFixed(2)}</span>
+            <span className="text-sm text-gray-400 font-medium">kg/m²</span>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="text-2xl">{rango.emoji}</span>
+          <p className="text-sm font-bold mt-0.5" style={{ color: rango.color }}>{rango.label}</p>
+        </div>
+      </div>
+
+      {/* Barra de progreso con marcador */}
+      <div>
+        <div className="relative h-3 rounded-full overflow-visible" style={{
+          background: 'linear-gradient(to right, #3B82F6 0%, #16A34A 28%, #D97706 46%, #EA580C 64%, #DC2626 80%, #7F1D1D 100%)'
+        }}>
+          {/* Marcador */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-5 h-5 rounded-full border-2 border-white shadow-md transition-all duration-500"
+            style={{ left: `${pct}%`, background: rango.color }}
+          />
+        </div>
+        {/* Etiquetas */}
+        <div className="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
+          <span>Bajo</span>
+          <span>Normal</span>
+          <span>Sobrepeso</span>
+          <span>Ob. I</span>
+          <span>Ob. II</span>
+          <span>Ob. III</span>
+        </div>
+      </div>
+
+      {/* Tabla de rangos */}
+      <div className="grid grid-cols-3 gap-1.5 pt-1">
+        {IMC_RANGOS.map(r => (
+          <div
+            key={r.label}
+            className="rounded-xl px-2 py-1.5 text-center transition-all"
+            style={{
+              background: rango.label === r.label ? r.color : 'rgba(0,0,0,0.04)',
+              color: rango.label === r.label ? '#fff' : '#6B7280',
+            }}
+          >
+            <p className="text-[10px] font-semibold leading-tight">{r.label}</p>
+            <p className="text-[10px] opacity-80 leading-tight">
+              {r.max === 999 ? `≥ ${r.min}` : `${r.min}–${r.max}`}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function PerfilPage() {
   const router = useRouter();
   const [perfil, setPerfil] = useState(null);
@@ -115,12 +190,7 @@ export default function PerfilPage() {
               />
             </div>
 
-            {form.imc && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-1">IMC Calculado</p>
-                <p className="text-3xl font-bold text-blue-600">{form.imc}</p>
-              </div>
-            )}
+            {form.imc && <IMCCard imc={parseFloat(form.imc)} />}
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">Sexo</label>
