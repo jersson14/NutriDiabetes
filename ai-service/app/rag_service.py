@@ -384,19 +384,101 @@ class RAGService:
         if not perfil:
             return "Paciente con DM2, sin información adicional."
 
-        parts = [f"- Clasificación: {perfil.clasificacion_dm2 or 'DM2'}"]
+        parts = []
+
+        # ── Datos demográficos y antropométricos ──
+        demo = []
+        if perfil.edad:
+            demo.append(f"{perfil.edad} años")
+        if perfil.sexo:
+            sexo_label = {"M": "Masculino", "F": "Femenino"}.get(perfil.sexo, perfil.sexo)
+            demo.append(sexo_label)
+        if demo:
+            parts.append(f"- Paciente: {', '.join(demo)}")
+
+        if perfil.peso_kg and perfil.talla_cm:
+            parts.append(f"- Peso: {perfil.peso_kg} kg | Talla: {perfil.talla_cm} cm")
+        elif perfil.peso_kg:
+            parts.append(f"- Peso: {perfil.peso_kg} kg")
+
+        if perfil.imc:
+            imc_val = round(perfil.imc, 1)
+            if imc_val < 18.5:
+                cat = "Bajo peso"
+            elif imc_val < 25:
+                cat = "Normopeso"
+            elif imc_val < 30:
+                cat = "Sobrepeso"
+            elif imc_val < 35:
+                cat = "Obesidad grado I"
+            elif imc_val < 40:
+                cat = "Obesidad grado II"
+            else:
+                cat = "Obesidad grado III (mórbida)"
+            parts.append(f"- IMC: {imc_val} kg/m² → {cat}")
+
+        if perfil.nivel_actividad:
+            act_labels = {
+                "SEDENTARIO": "Sedentario (sin ejercicio)",
+                "LIGERO": "Actividad ligera (1-3 días/semana)",
+                "MODERADO": "Actividad moderada (3-5 días/semana)",
+                "INTENSO": "Actividad intensa (6-7 días/semana)",
+                "MUY_INTENSO": "Muy intenso / atleta",
+            }
+            parts.append(f"- Actividad física: {act_labels.get(perfil.nivel_actividad, perfil.nivel_actividad)}")
+
+        if perfil.departamento:
+            parts.append(f"- Ubicación: {perfil.departamento}, Perú")
+
+        # ── Clasificación DM2 y medicamentos ──
+        parts.append(f"- Clasificación DM2: {perfil.clasificacion_dm2 or 'DM2'}")
         if perfil.hemoglobina_glicosilada:
-            parts.append(f"- HbA1c: {perfil.hemoglobina_glicosilada}%")
+            parts.append(f"- HbA1c registrada: {perfil.hemoglobina_glicosilada}%")
         if perfil.usa_insulina:
-            parts.append("- Usa insulina")
+            parts.append("- Medicación: Usa insulina")
         if perfil.usa_metformina:
-            parts.append("- Usa metformina")
+            parts.append("- Medicación: Usa metformina")
+
+        # ── Complicaciones (condicionan restricciones dietéticas) ──
+        complicaciones = []
+        if perfil.tiene_hipertension:
+            complicaciones.append("Hipertensión arterial → LIMITAR sodio <2000 mg/día")
+        if perfil.tiene_nefropatia:
+            complicaciones.append("Nefropatía diabética → LIMITAR proteínas y potasio")
+        if perfil.tiene_dislipidemia:
+            complicaciones.append("Dislipidemia → LIMITAR grasas saturadas y trans")
+        if perfil.tiene_retinopatia:
+            complicaciones.append("Retinopatía diabética")
+        if complicaciones:
+            parts.append("- Complicaciones:")
+            for c in complicaciones:
+                parts.append(f"    ⚠️ {c}")
+
+        # ── Restricciones alimentarias ──
         if perfil.alergias:
             parts.append(f"- Alergias: {', '.join(perfil.alergias)}")
         if perfil.intolerancias:
             parts.append(f"- Intolerancias: {', '.join(perfil.intolerancias)}")
         if perfil.restricciones:
-            parts.append(f"- Restricciones: {', '.join(perfil.restricciones)}")
+            parts.append(f"- Restricciones dietéticas: {', '.join(perfil.restricciones)}")
+
+        # ── Glucosa reciente ──
+        if perfil.glucosa_promedio_reciente:
+            parts.append(f"- Glucosa promedio reciente: {perfil.glucosa_promedio_reciente} mg/dL")
+        if perfil.hba1c_estimada:
+            parts.append(f"- HbA1c estimada (glucosa reciente): {perfil.hba1c_estimada}%")
+        if perfil.tiempo_en_rango_pct is not None:
+            tir = perfil.tiempo_en_rango_pct
+            tir_label = "✅ Buen control" if tir >= 70 else ("⚠️ Control parcial" if tir >= 50 else "🔴 Control deficiente")
+            parts.append(f"- Tiempo en rango glucémico: {tir}% ({tir_label})")
+        if perfil.glucosa_reciente:
+            ultimas = perfil.glucosa_reciente[:3]
+            resumen = ", ".join(
+                f"{g.get('valor', '?')} mg/dL ({g.get('tipo', '?')})"
+                for g in ultimas
+            )
+            parts.append(f"- Últimas glucosas: {resumen}")
+
         return "\n".join(parts)
 
     def _build_historial(self, historial) -> List[Dict]:
@@ -411,7 +493,8 @@ class RAGService:
         self,
         mensaje: str,
         perfil_salud=None,
-        historial=None
+        historial=None,
+        comidas_hoy=None,
     ) -> Dict[str, Any]:
         """
         Pipeline RAG completo:
@@ -431,13 +514,26 @@ class RAGService:
         perfil_text = self._build_perfil_text(perfil_salud)
         carb_max = perfil_salud.carbohidratos_max if perfil_salud else 45
 
+        # Resumen de comidas del día para evitar repeticiones en recomendaciones
+        comidas_hoy_text = ""
+        if comidas_hoy and (comidas_hoy.detalle or comidas_hoy.alimentos_ya_consumidos):
+            ya = ", ".join(comidas_hoy.alimentos_ya_consumidos) if comidas_hoy.alimentos_ya_consumidos else "ninguno"
+            comidas_hoy_text = (
+                f"\n\n--- COMIDAS REGISTRADAS HOY ---\n"
+                f"CHO acumulado: {comidas_hoy.cho_total_g}g | Kcal: {comidas_hoy.kcal_total} kcal\n"
+                f"Alimentos ya consumidos: {ya}\n"
+                f"IMPORTANTE: NO repitas estos alimentos en tus recomendaciones. "
+                f"Sugiere opciones complementarias que aporten variedad nutricional y "
+                f"no eleven innecesariamente el CHO total del día."
+            )
+
         # 3. Construir prompt del sistema
         system_prompt = SYSTEM_PROMPT.format(
             carb_max=carb_max,
             perfil_info=perfil_text,
             contexto_tpca=contexto_tpca_text,
             contexto_clinico=contexto_clinico_text,
-        )
+        ) + comidas_hoy_text
 
         # 4. Construir mensajes
         messages = [{"role": "system", "content": system_prompt}]

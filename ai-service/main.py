@@ -42,6 +42,7 @@ embeddings_service = EmbeddingsService()
 # ── Modelos Pydantic ──
 
 class PerfilSalud(BaseModel):
+    # DM2
     clasificacion_dm2: Optional[str] = "DM2_SIN_COMPLICACIONES"
     hemoglobina_glicosilada: Optional[float] = None
     usa_insulina: Optional[bool] = False
@@ -51,15 +52,48 @@ class PerfilSalud(BaseModel):
     restricciones: Optional[List[str]] = []
     carbohidratos_max: Optional[float] = 45.0
     calorias_max: Optional[int] = 2000
+    # Antropométricos y demográficos
+    peso_kg: Optional[float] = None
+    talla_cm: Optional[float] = None
+    imc: Optional[float] = None
+    sexo: Optional[str] = None
+    edad: Optional[int] = None
+    nivel_actividad: Optional[str] = None
+    # Complicaciones
+    tiene_hipertension: Optional[bool] = False
+    tiene_nefropatia: Optional[bool] = False
+    tiene_dislipidemia: Optional[bool] = False
+    tiene_retinopatia: Optional[bool] = False
+    # Ubicación
+    departamento: Optional[str] = None
+    # Glucosa reciente
+    glucosa_reciente: Optional[List[Dict[str, Any]]] = []
+    glucosa_promedio_reciente: Optional[int] = None
+    hba1c_estimada: Optional[str] = None
+    tiempo_en_rango_pct: Optional[int] = None
 
 class MensajeHistorial(BaseModel):
     rol: str
     contenido: str
 
+class ComidaHoy(BaseModel):
+    alimento:  Optional[str]   = None
+    tipo:      Optional[str]   = None
+    gramos:    Optional[float] = None
+    kcal:      Optional[float] = None
+    cho_g:     Optional[float] = None
+
+class ComidasHoyResumen(BaseModel):
+    detalle:                 Optional[List[ComidaHoy]] = []
+    cho_total_g:             Optional[int]  = 0
+    kcal_total:              Optional[int]  = 0
+    alimentos_ya_consumidos: Optional[List[str]] = []
+
 class RecommendRequest(BaseModel):
-    mensaje: str
-    perfil_salud: Optional[PerfilSalud] = None
-    historial: Optional[List[MensajeHistorial]] = []
+    mensaje:      str
+    perfil_salud: Optional[PerfilSalud]       = None
+    historial:    Optional[List[MensajeHistorial]] = []
+    comidas_hoy:  Optional[ComidasHoyResumen] = None
 
 class EmbeddingRequest(BaseModel):
     alimentos: List[Dict[str, Any]]
@@ -117,7 +151,8 @@ async def recommend(request: RecommendRequest):
         result = await rag_service.generate_recommendation(
             mensaje=request.mensaje,
             perfil_salud=request.perfil_salud,
-            historial=request.historial
+            historial=request.historial,
+            comidas_hoy=request.comidas_hoy,
         )
 
         elapsed = int((time.time() - start_time) * 1000)

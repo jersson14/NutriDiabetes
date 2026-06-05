@@ -75,6 +75,17 @@ const sendMessage = async (req, res) => {
       [convId]
     );
 
+    // Obtener comidas registradas HOY para evitar repeticiones y calcular CHO acumulado
+    const comidasHoy = await query(
+      `SELECT nombre_alimento, tipo_comida, cantidad_g,
+              calorias_total, carbohidratos_total_g, proteinas_total_g
+       FROM registro_comidas
+       WHERE usuario_id = $1
+         AND fecha_comida::date = CURRENT_DATE
+       ORDER BY fecha_comida ASC`,
+      [userId]
+    );
+
     // Obtener últimas mediciones de glucosa para contexto clínico real
     const glucosaReciente = await query(
       `SELECT valor_mg_dl, tipo_medicion, esta_en_rango, fecha_medicion
@@ -105,9 +116,20 @@ const sendMessage = async (req, res) => {
       await axios.get(`${RAG_SERVICE_URL}/ping`, { timeout: 10000 });
     } catch (_) { /* ignorar — si falla, continuamos igual */ }
 
+    // Resumen de comidas del día para el RAG
+    const comidasRows = comidasHoy.rows;
+    const choAcumuladoHoy = comidasRows.reduce((s, r) => s + parseFloat(r.carbohidratos_total_g || 0), 0);
+    const kcalAcumuladasHoy = comidasRows.reduce((s, r) => s + parseFloat(r.calorias_total || 0), 0);
+    const alimentosYaComidos = [...new Set(comidasRows.map(r => r.nombre_alimento).filter(Boolean))];
+
+    const edadAnios = perfil.fecha_nacimiento
+      ? Math.floor((Date.now() - new Date(perfil.fecha_nacimiento)) / 31_557_600_000)
+      : null;
+
     const ragPayload = {
       mensaje,
       perfil_salud: {
+        // Datos clínicos DM2
         clasificacion_dm2:        perfil.clasificacion_dm2,
         hemoglobina_glicosilada:  perfil.hemoglobina_glicosilada,
         usa_insulina:             perfil.usa_insulina,
@@ -117,6 +139,21 @@ const sendMessage = async (req, res) => {
         restricciones:            perfil.restricciones_dieteticas,
         carbohidratos_max:        perfil.carbohidratos_por_comida_max_g,
         calorias_max:             perfil.calorias_diarias_max,
+        // Datos antropométricos y demográficos
+        peso_kg:                  perfil.peso_kg,
+        talla_cm:                 perfil.talla_cm,
+        imc:                      perfil.imc,
+        sexo:                     perfil.sexo,
+        edad:                     edadAnios,
+        nivel_actividad:          perfil.nivel_actividad,
+        // Complicaciones
+        tiene_hipertension:       perfil.tiene_hipertension,
+        tiene_nefropatia:         perfil.tiene_nefropatia,
+        tiene_dislipidemia:       perfil.tiene_dislipidemia,
+        tiene_retinopatia:        perfil.tiene_retinopatia,
+        // Ubicación (adaptar recomendaciones a disponibilidad regional)
+        departamento:             perfil.departamento,
+        // Glucosa reciente
         glucosa_reciente:         glucosaRows.map(r => ({
           valor:  r.valor_mg_dl,
           tipo:   r.tipo_medicion,
@@ -125,6 +162,18 @@ const sendMessage = async (req, res) => {
         glucosa_promedio_reciente: promedioGlucosa,
         hba1c_estimada:           eHbA1c,
         tiempo_en_rango_pct:      tirPct,
+      },
+      comidas_hoy: {
+        detalle:            comidasRows.map(r => ({
+          alimento:  r.nombre_alimento,
+          tipo:      r.tipo_comida,
+          gramos:    r.cantidad_g,
+          kcal:      r.calorias_total,
+          cho_g:     r.carbohidratos_total_g,
+        })),
+        cho_total_g:        Math.round(choAcumuladoHoy),
+        kcal_total:         Math.round(kcalAcumuladasHoy),
+        alimentos_ya_consumidos: alimentosYaComidos,
       },
       historial: historial.rows.reverse(),
     };

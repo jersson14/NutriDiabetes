@@ -1,8 +1,8 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { perfilAPI } from '@/lib/api';
-import { Header, FormField, NavBar, Button, InfoCard } from '@/components';
+import { Header, FormField, NavBar, Button } from '@/components';
 import { User, Heart, Pill, Check, AlertCircle } from 'lucide-react';
 
 const IMC_RANGOS = [
@@ -88,13 +88,24 @@ export default function PerfilPage() {
   const [success, setSuccess] = useState('');
   const [saveError, setSaveError] = useState('');
   const [form, setForm] = useState({});
-
   const [userName, setUserName] = useState('');
+  const [esRequerido, setEsRequerido] = useState(false);
+
+  // IMC calculado en tiempo real a partir de peso y talla del formulario
+  const imcCalculado = useMemo(() => {
+    const p = parseFloat(form.peso_kg);
+    const t = parseFloat(form.talla_cm);
+    if (!p || !t || t <= 0) return null;
+    return p / Math.pow(t / 100, 2);
+  }, [form.peso_kg, form.talla_cm]);
 
   useEffect(() => {
     if (!localStorage.getItem('accessToken')) { router.push('/login'); return; }
     const u = localStorage.getItem('user');
     if (u) setUserName(JSON.parse(u).nombre || JSON.parse(u).nombre_completo || '');
+    // Detectar si fue redirigido por falta de perfil
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('requerido') === 'true') setEsRequerido(true);
     loadPerfil();
   }, []);
 
@@ -111,8 +122,12 @@ export default function PerfilPage() {
     setSaving(true);
     try {
       await perfilAPI.updateSalud(form);
-      setSuccess('Perfil actualizado ✅');
-      setTimeout(() => setSuccess(''), 3000);
+      // Marcar perfil como completado y limpiar flag de nuevo usuario
+      localStorage.removeItem('esNuevo');
+      localStorage.setItem('perfil_completo', '1');
+      setEsRequerido(false);
+      setSuccess('Perfil guardado ✅ Ahora puedes usar todas las funciones.');
+      setTimeout(() => setSuccess(''), 4000);
     } catch (err) {
       setSaveError(err.response?.data?.error || 'Error al guardar los cambios');
       setTimeout(() => setSaveError(''), 5000);
@@ -146,6 +161,17 @@ export default function PerfilPage() {
       />
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10 space-y-6">
+        {/* Banner perfil obligatorio */}
+        {esRequerido && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 animate-slide-down">
+            <AlertCircle size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-800 text-sm">Completa tu perfil para continuar</p>
+              <p className="text-xs text-amber-600 mt-0.5">El sistema necesita tus datos clínicos para personalizar las recomendaciones nutricionales.</p>
+            </div>
+          </div>
+        )}
+
         {saveError && (
           <div className="bg-red-50 border border-red-200/80 rounded-xl p-4 flex items-start gap-3 animate-slide-down">
             <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
@@ -190,7 +216,7 @@ export default function PerfilPage() {
               />
             </div>
 
-            {form.imc && <IMCCard imc={parseFloat(form.imc)} />}
+            {imcCalculado && <IMCCard imc={imcCalculado} />}
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">Sexo</label>

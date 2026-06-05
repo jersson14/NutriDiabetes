@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { alimentosAPI, comidasAPI } from '@/lib/api';
 import { Header, FilterBar, Badge, NavBar } from '@/components';
-import { ChefHat, Flame, Leaf, Zap, Plus, X, Check, BookOpen } from 'lucide-react';
+import { ChefHat, Flame, Leaf, Zap, Plus, X, Check, AlertTriangle, Info } from 'lucide-react';
 
 const TIPOS_COMIDA = [
   { value: 'DESAYUNO',    label: 'Desayuno',    emoji: '☀️' },
@@ -24,6 +24,14 @@ function calcNutri(alimento, gramos) {
   };
 }
 
+// Calcula la porción sugerida para DM2 apuntando a ~45g CHO por comida (ADA)
+function porcionSugeridaDM2(alimento) {
+  const cho = parseFloat(alimento.carbohidratos_totales_g);
+  if (!cho || cho <= 0) return null;
+  const gramos = Math.round(45 / (cho / 100));
+  return Math.min(Math.max(gramos, 30), 300); // clamp 30–300 g
+}
+
 export default function AlimentosPage() {
   const [alimentos, setAlimentos] = useState([]);
   const [search, setSearch] = useState('');
@@ -33,8 +41,11 @@ export default function AlimentosPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [userName, setUserName] = useState('');
 
+  // Comidas registradas hoy (para alertar repeticiones)
+  const [comidasHoy, setComidasHoy] = useState([]);
+
   // Modal de registro de comida
-  const [modal, setModal] = useState(null);   // alimento seleccionado
+  const [modal, setModal] = useState(null);
   const [porcion, setPorcion] = useState(100);
   const [tipoComida, setTipoComida] = useState('ALMUERZO');
   const [guardando, setGuardando] = useState(false);
@@ -43,8 +54,17 @@ export default function AlimentosPage() {
   useEffect(() => {
     const u = localStorage.getItem('user');
     if (u) setUserName(JSON.parse(u).nombre || JSON.parse(u).nombre_completo || '');
+    // Cargar comidas de hoy para detectar repeticiones
+    comidasAPI.getHoy().then(r => setComidasHoy(r.data?.comidas || r.data || [])).catch(() => {});
     loadAlimentos();
   }, [search, recFilter, page]);
+
+  // IDs de alimentos ya registrados hoy
+  const idsRegistradosHoy = new Set(comidasHoy.map(c => c.alimento_id).filter(Boolean));
+
+  // Verifica si un alimento ya se registró en el mismo tipo de comida hoy
+  const yaEnMismoTipo = (alimentoId) =>
+    comidasHoy.some(c => c.alimento_id === alimentoId && c.tipo_comida === tipoComida);
 
   const loadAlimentos = async () => {
     setLoading(true);
@@ -58,7 +78,8 @@ export default function AlimentosPage() {
 
   const openModal = (alimento) => {
     setModal(alimento);
-    setPorcion(100);
+    // Pre-setear porción sugerida DM2, o 100g si no aplica
+    setPorcion(porcionSugeridaDM2(alimento) || 100);
     setGuardadoOk(false);
   };
 
@@ -158,8 +179,10 @@ export default function AlimentosPage() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {alimentos.map((a, idx) => {
-                const rec     = getRecommendationBadge(a.recomendacion);
-                const igColor = getIGColor(a.indice_glucemico);
+                const rec       = getRecommendationBadge(a.recomendacion);
+                const igColor   = getIGColor(a.indice_glucemico);
+                const yaHoy     = idsRegistradosHoy.has(a.id);
+                const sugerida  = porcionSugeridaDM2(a);
                 return (
                   <div
                     key={a.id}
@@ -173,9 +196,21 @@ export default function AlimentosPage() {
                         <div>
                           <h3 className="font-bold text-gray-900">{a.nombre_comun || a.nombre}</h3>
                           <p className="text-xs text-gray-500">{a.categoria}</p>
+                          {yaHoy && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 mt-1">
+                              <AlertTriangle size={9} /> Ya registrado hoy
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <Badge variant={rec.variant} size="sm">{rec.text}</Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge variant={rec.variant} size="sm">{rec.text}</Badge>
+                        {sugerida && (
+                          <span className="text-[10px] text-[#0057B8] font-semibold">
+                            ~{sugerida}g DM2
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Nutrición */}
@@ -279,11 +314,30 @@ export default function AlimentosPage() {
               </button>
             </div>
 
+            {/* Alerta: mismo alimento en mismo tipo de comida */}
+            {yaEnMismoTipo(modal.id) && (
+              <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 animate-slide-down">
+                <AlertTriangle size={15} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 font-medium leading-snug">
+                  Ya registraste este alimento en <span className="font-bold">{tipoComida.toLowerCase().replace('_', ' ')}</span> hoy. Considera variedad para mejor control glucémico.
+                </p>
+              </div>
+            )}
+
             {/* Tamaño de porción */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Tamaño de porción
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-gray-700">Tamaño de porción</label>
+                {porcionSugeridaDM2(modal) && (
+                  <button
+                    onClick={() => setPorcion(porcionSugeridaDM2(modal))}
+                    className="flex items-center gap-1 text-[11px] text-[#0057B8] font-semibold hover:underline"
+                  >
+                    <Info size={11} />
+                    Sugerida DM2: {porcionSugeridaDM2(modal)}g (~45g CHO)
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-3">
                 <input
                   type="number"
@@ -313,20 +367,33 @@ export default function AlimentosPage() {
 
             {/* Preview nutricional */}
             {(() => {
-              const n = calcNutri(modal, porcion);
+              const n   = calcNutri(modal, porcion);
+              const cho = n.carbohidratos;
+              const choColor = cho > 60 ? 'text-red-600' : cho > 45 ? 'text-amber-600' : 'text-orange-600';
               return (
-                <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-4 gap-2 text-center">
-                  {[
-                    { label: 'kcal',    value: n.calorias,       color: 'text-blue-600'    },
-                    { label: 'Carbs g', value: n.carbohidratos,  color: 'text-orange-600'  },
-                    { label: 'Prot g',  value: n.proteinas,      color: 'text-green-600'   },
-                    { label: 'Fibra g', value: n.fibra,          color: 'text-purple-600'  },
-                  ].map(item => (
-                    <div key={item.label}>
-                      <p className={`text-lg font-bold tabular-nums ${item.color}`}>{item.value}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">{item.label}</p>
+                <div className="rounded-xl overflow-hidden border border-gray-100">
+                  <div className="bg-gray-50 p-4 grid grid-cols-4 gap-2 text-center">
+                    {[
+                      { label: 'kcal',    value: n.calorias,       color: 'text-blue-600'    },
+                      { label: 'Carbs g', value: n.carbohidratos,  color: choColor           },
+                      { label: 'Prot g',  value: n.proteinas,      color: 'text-green-600'   },
+                      { label: 'Fibra g', value: n.fibra,          color: 'text-purple-600'  },
+                    ].map(item => (
+                      <div key={item.label}>
+                        <p className={`text-lg font-bold tabular-nums ${item.color}`}>{item.value}</p>
+                        <p className="text-[10px] text-gray-400 font-medium">{item.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Alerta CHO excesivo (>60g supera recomendación ADA por comida) */}
+                  {cho > 60 && (
+                    <div className="bg-red-50 border-t border-red-100 px-3 py-1.5 flex items-center gap-1.5">
+                      <AlertTriangle size={12} className="text-red-500 flex-shrink-0" />
+                      <p className="text-[11px] text-red-600 font-medium">
+                        {cho}g CHO supera el límite ADA (≤60g/comida para DM2). Reduce la porción.
+                      </p>
                     </div>
-                  ))}
+                  )}
                 </div>
               );
             })()}

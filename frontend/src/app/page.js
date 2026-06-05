@@ -7,10 +7,17 @@ export default function HomePage() {
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
-    if (token) {
-      router.push('/dashboard');
+    if (!token) { router.push('/login'); return; }
+
+    // Nuevo usuario sin perfil → forzar completar perfil primero
+    const esNuevo = localStorage.getItem('esNuevo') === '1';
+    const perfilCompleto = localStorage.getItem('perfil_completo') === '1';
+
+    if (esNuevo && !perfilCompleto) {
+      router.push('/perfil?requerido=true');
     } else {
-      router.push('/login');
+      // Usuario con perfil → ir directo al Chat (flujo principal de la app)
+      router.push('/chat');
     }
   }, [router]);
 
