@@ -667,17 +667,9 @@ El AI Service utiliza un **System Prompt especializado de ~160 líneas** que inc
 
 > Todas las métricas se almacenan automáticamente en la tabla `metricas_sistema` de PostgreSQL para análisis posterior.
 
----
-
-## 📄 Licencia
-
-Proyecto de tesis académica — **Maestría en Ingeniería de Sistemas e Informática**  
-Universidad Continental, Huancayo — Perú, 2026
-
-> ⚠️ Este software es para uso académico y de investigación. No debe utilizarse como sustituto de asesoría médica profesional. Siempre consulte con un profesional de salud calificado.
 
 ---
 
-Hecho con ❤️ en Perú 🇵🇪
+Desarrollado por Jersson Corilla Miranda en Perú 🇵🇪
 
 **NutriDiabetes** — Nutrición inteligente para una vida mejor con diabetes
