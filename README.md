@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Estado-En%20Desarrollo-yellow?style=for-the-badge" alt="Estado"/>
+  <img src="https://img.shields.io/badge/Estado-Completado-brightgreen?style=for-the-badge" alt="Estado"/>
   <img src="https://img.shields.io/badge/Versión-1.0.0-blue?style=for-the-badge" alt="Versión"/>
   <img src="https://img.shields.io/badge/Licencia-Académica-green?style=for-the-badge" alt="Licencia"/>
   <img src="https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"/>
@@ -16,7 +16,7 @@
 
 ---
 
-## 📋 Tabla de Contenidos.
+## 📋 Tabla de Contenidos
 
 - [Objetivo](#-objetivo)
 - [¿Cómo Funciona?](#-cómo-funciona)
@@ -31,10 +31,8 @@
 - [Base de Datos](#-base-de-datos)
 - [Pipeline RAG](#-pipeline-rag)
 - [Módulos del Frontend](#-módulos-del-frontend)
-- [Estado Actual del Proyecto](#-estado-actual-del-proyecto)
-- [Mejoras Futuras](#-mejoras-futuras-roadmap)
+- [Estado del Proyecto](#-estado-del-proyecto)
 - [Métricas de Evaluación (Tesis)](#-métricas-de-evaluación-tesis)
-- [Contribución](#-contribución)
 - [Licencia](#-licencia)
 
 ---
@@ -70,7 +68,7 @@ flowchart LR
     B --> H[📱 Respuesta<br>con Info Nutricional]
 ```
 
-### Flujo detallado:
+### Flujo detallado
 
 1. **El usuario ingresa qué tiene en su cocina** → _"Tengo pollo, quinua y brócoli"_
 2. **El Backend** recibe el mensaje, obtiene el perfil de salud del paciente y lo envía al microservicio IA
@@ -84,7 +82,7 @@ flowchart LR
 
 ## 🏗️ Arquitectura del Sistema
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        CLIENTE (PWA)                           │
 │  ┌─────────────────────────────────────────────────────────┐   │
@@ -192,7 +190,7 @@ flowchart LR
 
 ## 📁 Estructura del Proyecto
 
-```
+```text
 NutriDiabetes/
 ├── 📂 frontend/                     # 🖥️ Next.js 14 PWA
 │   ├── src/
@@ -284,7 +282,7 @@ NutriDiabetes/
 | **PostgreSQL** | 14+            | `psql --version`   |
 | **Git**        | 2.x            | `git --version`    |
 
-### Cuentas necesarias (nivel gratuito disponible):
+### Cuentas necesarias (nivel gratuito disponible)
 
 - 🔑 [OpenAI API Key](https://platform.openai.com/api-keys) — Para embeddings y GPT-4
 - 🌲 [Pinecone API Key](https://www.pinecone.io/) — Base de datos vectorial (free tier: 1 índice)
@@ -456,11 +454,11 @@ cd frontend && npm run dev
 
 ### URLs de desarrollo
 
-| Servicio    | URL                       | Health Check                     |
-| ----------- | ------------------------- | -------------------------------- |
-| Frontend    | http://localhost:3000     | —                                |
-| Backend API | http://localhost:4000/api | http://localhost:4000/api/health |
-| AI Service  | http://localhost:8000     | http://localhost:8000/health     |
+| Servicio    | URL                         | Health Check                           |
+| ----------- | --------------------------- | -------------------------------------- |
+| Frontend    | `http://localhost:3000`     | —                                      |
+| Backend API | `http://localhost:4000/api` | `http://localhost:4000/api/health`     |
+| AI Service  | `http://localhost:8000`     | `http://localhost:8000/health`         |
 
 ---
 
@@ -635,9 +633,7 @@ El AI Service utiliza un **System Prompt especializado de ~160 líneas** que inc
 
 ---
 
-## ✅ Estado Actual del Proyecto
-
-### ✅ Completado
+## ✅ Estado del Proyecto
 
 - [x] Diseño de base de datos PostgreSQL completa (17+ tablas, triggers, vistas)
 - [x] Extracción de datos de la TPCA 2025 (888 alimentos)
@@ -654,51 +650,6 @@ El AI Service utiliza un **System Prompt especializado de ~160 líneas** que inc
 - [x] Sistema de métricas para evaluación de tesis
 - [x] Paleta de diseño MINSA/EsSalud
 - [x] Seguridad: Helmet, CORS, Rate Limiting, JWT
-
-### 🔄 En Progreso
-
-- [ ] Pruebas con pacientes reales para métricas SUS
-- [ ] Validación por nutricionistas clínicos
-- [ ] Pulir UI/UX responsive para móviles
-- [ ] Dashboard de métricas RAG para tesis
-
----
-
-## 🚀 Mejoras Futuras (Roadmap)
-
-### 🔴 Alta Prioridad
-
-| Mejora                   | Descripción                                                      | Impacto             |
-| ------------------------ | ---------------------------------------------------------------- | ------------------- |
-| **Tests automatizados**  | Unit tests (Jest/Pytest) + Integration tests                     | Calidad del código  |
-| **Dockerización**        | `docker-compose.yml` para levantar todo el stack con un comando  | Facilidad de deploy |
-| **CI/CD**                | GitHub Actions para tests, lint, y deploy automático             | DevOps              |
-| **Mejorar .gitignore**   | Agregar `node_modules/`, `__pycache__/`, `.next/`, `*.pdf`, etc. | Seguridad/Limpieza  |
-| **Validar inputs**       | Agregar express-validator o Joi en el backend                    | Seguridad           |
-| **Migrar a GPT-4o-mini** | Reducir costos de API sin perder calidad                         | Costo               |
-
-### 🟡 Media Prioridad
-
-| Mejora                        | Descripción                                                    | Impacto        |
-| ----------------------------- | -------------------------------------------------------------- | -------------- |
-| **Streaming de respuestas**   | SSE/WebSocket para mostrar la respuesta del LLM en tiempo real | UX             |
-| **Caché de embeddings**       | Redis para cachear consultas frecuentes                        | Performance    |
-| **Notificaciones push**       | Recordatorios de medición de glucosa vía PWA push              | Adherencia     |
-| **Modo offline**              | Service Worker + IndexedDB para funcionar sin internet         | Accesibilidad  |
-| **Multi-idioma**              | Soporte para quechua (idioma nativo peruano)                   | Inclusión      |
-| **Rate limiting por usuario** | Rate limit diferenciado por rol (paciente vs nutricionista)    | Seguridad      |
-| **Logging centralizado**      | Winston o Pino con rotación de logs                            | Observabilidad |
-
-### 🟢 Baja Prioridad (futuro)
-
-| Mejora                          | Descripción                                         | Impacto     |
-| ------------------------------- | --------------------------------------------------- | ----------- |
-| **OCR de fotos**                | Fotografiar plato de comida → estimar carbohidratos | Innovación  |
-| **Integración con glucómetros** | Lectura automática de glucómetros Bluetooth         | IoT         |
-| **Gamificación**                | Puntos/logros por mantener glucosa en rango         | Motivación  |
-| **Panel Nutricionista**         | Dashboard para que el nutricionista vea pacientes   | Multi-rol   |
-| **Exportar informe PDF**        | Generar informe de seguimiento para el médico       | Clínico     |
-| **API pública**                 | Documentación Swagger/OpenAPI del backend           | Integración |
 
 ---
 
@@ -718,26 +669,6 @@ El AI Service utiliza un **System Prompt especializado de ~160 líneas** que inc
 
 ---
 
-## 🤝 Contribución
-
-Este es un proyecto de tesis académica. Si deseas contribuir:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/mi-mejora`)
-3. Commit tus cambios (`git commit -m 'Agregar mi mejora'`)
-4. Push a la rama (`git push origin feature/mi-mejora`)
-5. Abre un Pull Request
-
-### Convenciones de código
-
-- **Commits**: Mensajes descriptivos en español
-- **Backend**: CommonJS (`require/module.exports`)
-- **Frontend**: ES Modules (`import/export`)
-- **Python**: PEP 8, docstrings en español
-- **SQL**: Nombres en `snake_case`, comentarios descriptivos
-
----
-
 ## 📄 Licencia
 
 Proyecto de tesis académica — **Maestría en Ingeniería de Sistemas e Informática**  
@@ -747,8 +678,6 @@ Universidad Continental, Huancayo — Perú, 2026
 
 ---
 
-<p align="center">
-  Hecho con ❤️ en Perú 🇵🇪
-  <br>
-  <strong>NutriDiabetes</strong> — Nutrición inteligente para una vida mejor con diabetes
-</p>
+Hecho con ❤️ en Perú 🇵🇪
+
+**NutriDiabetes** — Nutrición inteligente para una vida mejor con diabetes
