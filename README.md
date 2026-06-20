@@ -667,6 +667,45 @@ El AI Service utiliza un **System Prompt especializado de ~160 líneas** que inc
 
 > Todas las métricas se almacenan automáticamente en la tabla `metricas_sistema` de PostgreSQL para análisis posterior.
 
+### 📈 Resultados obtenidos (evaluación cuantitativa)
+
+Resultados extraídos de `scripts/evaluacion/data/resultados_finales_tesis.xlsx` (generado con `reporte_final_tesis.py`), sobre 30 consultas directas de valores calóricos validadas contra la TPCA 2025 CENAN/INS:
+
+| Indicador                                        | Resultado                |
+| ------------------------------------------------- | ------------------------- |
+| **MAPE promedio** (error calórico)                | **15.18 %**               |
+| Desviación estándar del MAPE                      | 35.66 %                   |
+| Clasificación **Excelente** (error ≤ 5%)          | **60.0 %** de los casos   |
+| Clasificación **Bueno** (error ≤ 10%)             | 13.3 % de los casos       |
+| Clasificación **Aceptable** (error ≤ 20%)         | 6.7 % de los casos        |
+| **Cobertura Excelente + Bueno** (error ≤ 10%)     | **73.3 %**                |
+| Casos a revisar (error > 20%)                     | 20.0 %                    |
+| Similitud coseno promedio (coherencia semántica)  | 0.7369 (buena)            |
+| Tiempo de respuesta promedio                      | 8 397 ms (~8.4 s)         |
+
+**Por tipo de consulta (MAPE promedio):**
+
+| Tipo de pregunta             | MAPE promedio | n  |
+| ----------------------------- | -------------- | -- |
+| Compleja (nutrición)          | 2.85 %         | 1  |
+| Simple (calorías)             | 14.92 %        | 42 |
+| Combinación (dieta completa)  | 51.09 %        | 7  |
+
+### 🆚 RAG vs. LLMs sin recuperación de contexto
+
+Comparación del enfoque RAG (Pinecone + GPT) frente a modelos generales usados sin anclaje a la TPCA (`scripts/evaluacion/data/resumen_modelos.csv`):
+
+| Modelo                   | MAPE promedio            | Similitud coseno              | Tiempo promedio |
+| ------------------------- | ------------------------- | ------------------------------- | ----------------- |
+| **RAG (NutriDiabetes)**  | 17.07 %                   | **0.276** (mejor coherencia)   | 8 899 ms          |
+| GPT-4o-mini (sin RAG)    | **14.11 %** (mejor MAPE)  | 0.143                           | 3 089 ms          |
+| Claude Haiku (sin RAG)   | 20.04 %                   | 0.189                           | 2 753 ms          |
+
+- El enfoque RAG **mejora la coherencia semántica en +93 %** frente a GPT-4o-mini sin RAG (0.276 vs 0.143 de similitud coseno), al anclar las respuestas en los 888 alimentos reales de la TPCA en lugar de en el conocimiento general del modelo.
+- Frente a Claude Haiku sin RAG, el RAG **reduce el error calórico (MAPE) en 14.8 %**.
+- El costo de esta mayor precisión nutricional es un tiempo de respuesta más alto (~8.9 s vs ~2.8–3.1 s), por la latencia adicional de la búsqueda semántica en Pinecone.
+
+> Estos resultados demuestran que, para un sistema dirigido a pacientes con DM2, la recuperación de información contextual (RAG) reduce el riesgo de errores numéricos en el conteo de carbohidratos/calorías frente a un LLM genérico de propósito general — un factor clínicamente relevante para el control glucémico y el cálculo de porciones.
 
 ---
 
