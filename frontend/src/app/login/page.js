@@ -218,7 +218,7 @@ export default function LoginPage() {
 
           <p className="mt-6 text-white/30 text-xs flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block" />
-            Respaldado por TPCA 2025 · CENAN/INS · Universidad Continental
+            Respaldado por TPCA 2025 · CENAN/INS 
           </p>
         </div>
       </div>
