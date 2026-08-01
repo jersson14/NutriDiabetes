@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { alimentosAPI, comidasAPI } from '@/lib/api';
 import { Header, FilterBar, Badge, NavBar } from '@/components';
-import { ChefHat, Flame, Leaf, Zap, Plus, X, Check, AlertTriangle, Info } from 'lucide-react';
+import { ChefHat, Flame, Leaf, Zap, Plus, X, Check, AlertTriangle, Info, BookOpen } from 'lucide-react';
 
 const TIPOS_COMIDA = [
   { value: 'DESAYUNO',    label: 'Desayuno',    emoji: '☀️' },
