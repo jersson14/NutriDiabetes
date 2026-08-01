@@ -77,12 +77,14 @@ const sendMessage = async (req, res) => {
 
     // Obtener comidas registradas HOY para evitar repeticiones y calcular CHO acumulado
     const comidasHoy = await query(
-      `SELECT nombre_alimento, tipo_comida, cantidad_g,
-              calorias_total, carbohidratos_total_g, proteinas_total_g
-       FROM registro_comidas
-       WHERE usuario_id = $1
-         AND fecha_comida::date = CURRENT_DATE
-       ORDER BY fecha_comida ASC`,
+      `SELECT ca.nombre_alimento, rc.tipo_comida, ca.cantidad_g,
+              ca.calorias AS calorias_total, ca.carbohidratos_g AS carbohidratos_total_g,
+              ca.proteinas_g AS proteinas_total_g
+       FROM registro_comidas rc
+       JOIN comida_alimentos ca ON ca.comida_id = rc.id
+       WHERE rc.usuario_id = $1
+         AND rc.fecha_comida::date = CURRENT_DATE
+       ORDER BY rc.fecha_comida ASC`,
       [userId]
     );
 
